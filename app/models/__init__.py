@@ -1,6 +1,4 @@
-from .Person import(
-    Person
-)
+from .Person import Person
 
 __all__ = [
     "Person",
