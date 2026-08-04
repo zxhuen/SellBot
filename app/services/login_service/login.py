@@ -4,6 +4,7 @@ from fastapi import HTTPException
 import logging
 from app.core.supabse_bucket import supabase
 from app.models.User import User
+from app.models.User_Usage import UserUsage
 
 
 def login_user(token: str, db: Session):
@@ -29,7 +30,7 @@ def login_user(token: str, db: Session):
 
             usage = UserUsage(
                 user_id=user.id,
-                used_today=0,
+                products_created_today=0,
             )
 
             db.add(usage)
