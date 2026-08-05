@@ -25,7 +25,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id: Mapped[UUID] = mapped_column(
-        String(36),
+        UUID,
         primary_key=True,
         default=lambda: uuid4(),
     )

@@ -8,6 +8,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from app.api.Login import router as loginRouter
+from app.api.products import router as productRouter
 
 app = FastAPI(title="SellBot API")
 
@@ -33,3 +34,4 @@ app.add_middleware(
 )
 
 app.include_router(loginRouter)
+app.include_router(productRouter)

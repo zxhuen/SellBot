@@ -23,7 +23,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id: Mapped[UUID] = mapped_column(
-        String(36),
+        UUID,
         primary_key=True,
         default=lambda: uuid4(),
     )

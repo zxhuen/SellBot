@@ -24,7 +24,7 @@ class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
     id: Mapped[UUID] = mapped_column(
-        String(36),
+        UUID,
         primary_key=True,
         default=lambda: str(uuid4()),
     )

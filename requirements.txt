@@ -18,3 +18,5 @@ slowapi
 rich
 
 supabase
+
+google-genai
