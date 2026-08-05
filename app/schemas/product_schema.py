@@ -13,6 +13,7 @@ class ProductResponse(BaseModel):
     id: UUID
     title: str
     price: Decimal
+    public_id: str
 
     class Config:
         from_attributes = True

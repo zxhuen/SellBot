@@ -6,7 +6,10 @@ from app.schemas.product_schema import ProductCreate, ProductResponse
 from app.services.login_service.login import login_user
 from app.core.security import oauth2_scheme
 from app.models.User import User
-from app.services.product_service.product_services import create_product_with_ai
+from app.services.product_service.product_services import (
+    create_product_with_ai,
+    list_product_services,
+)
 from app.services.validation_service.validation import get_current_user
 
 router = APIRouter(prefix="/Products", tags=["Products"])
@@ -22,3 +25,12 @@ async def add_product(
     user: User = Depends(get_current_user),
 ):
     return await create_product_with_ai(product, user, db)
+
+
+@router.get("/list-product", response_model=ProductResponse)
+def get_product(
+    access_token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    list_product_services(user, db)

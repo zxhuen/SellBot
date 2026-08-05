@@ -1,5 +1,7 @@
+from email import message
 from uuid import uuid4
 from sqlalchemy.orm import Session
+from app.Repository.Product_Repo.product_repository import list_product_repo
 from app.ai.content_generation.product_description_generation import (
     product_description_gemini_response,
 )
@@ -43,3 +45,12 @@ async def create_product_with_ai(product: ProductCreate, user: User, db: Session
     improvised_description = await revise_description(product.description)
     product.description = improvised_description
     return create_product(product, user, db)
+
+
+def list_product_services(user: User, db: Session):
+    products = list_product_repo(user, db)
+
+    if products is None:
+        raise HTTPException(status_code=401, message="no products found")
+
+    return products
