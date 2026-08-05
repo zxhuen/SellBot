@@ -12,6 +12,7 @@ class ProductCreate(BaseModel):
 class ProductResponse(BaseModel):
     id: UUID
     title: str
+    description: str
     price: Decimal
     public_id: str
 

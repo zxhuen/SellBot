@@ -10,7 +10,10 @@ from app.services.product_service.product_services import (
     create_product_with_ai,
     list_product_services,
 )
-from app.services.validation_service.validation import get_current_user
+from app.services.validation_service.validation import (
+    get_current_user,
+    check_usage_validation,
+)
 
 router = APIRouter(prefix="/Products", tags=["Products"])
 
@@ -24,13 +27,15 @@ async def add_product(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    check_usage_validation(user, db)
+
     return await create_product_with_ai(product, user, db)
 
 
-@router.get("/list-product", response_model=ProductResponse)
+@router.get("/list-product", response_model=list[ProductResponse])
 def get_product(
     access_token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    list_product_services(user, db)
+    return list_product_services(user, db)

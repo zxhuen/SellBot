@@ -16,23 +16,34 @@ from app.core.supabse_bucket import supabase
 from app.models.User import User
 from app.models.User_Usage import UserUsage
 from app.schemas.product_schema import ProductCreate
+from sqlalchemy.exc import SQLAlchemyError
 
 
 def create_product(product: ProductCreate, user: User, db: Session):
-    new_product = Product(
-        id=uuid4(),
-        owner_id=user.id,
-        title=product.title,
-        description=product.description,
-        price=product.price,
-        public_id=str(uuid4().hex[:12]),  # or however you generate your public IDs
-    )
+    try:
+        new_product = Product(
+            id=uuid4(),
+            owner_id=user.id,
+            title=product.title,
+            description=product.description,
+            price=product.price,
+            public_id=uuid4().hex[:12],
+        )
 
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
+        db.add(new_product)
+        user.usage.products_created_today += 1
 
-    return new_product
+        db.commit()
+        db.refresh(new_product)
+
+        return new_product
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create product.",
+        ) from e
 
 
 async def revise_description(description: str):
