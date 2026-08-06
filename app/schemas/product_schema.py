@@ -18,3 +18,12 @@ class ProductResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PublicProductResponse(BaseModel):
+    title: str
+    description: str
+    price: Decimal
+
+    class Config:
+        from_attributes = True

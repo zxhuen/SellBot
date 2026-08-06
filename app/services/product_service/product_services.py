@@ -1,7 +1,11 @@
 from email import message
 from uuid import uuid4
 from sqlalchemy.orm import Session
-from app.Repository.Product_Repo.product_repository import list_product_repo
+from app.Repository.Product_Repo.product_repository import (
+    get_product,
+    get_product_public_id,
+    list_product_repo,
+)
 from app.ai.content_generation.product_description_generation import (
     product_description_gemini_response,
 )
@@ -17,6 +21,7 @@ from app.models.User import User
 from app.models.User_Usage import UserUsage
 from app.schemas.product_schema import ProductCreate
 from sqlalchemy.exc import SQLAlchemyError
+from uuid import UUID
 
 
 def create_product(product: ProductCreate, user: User, db: Session):
@@ -62,6 +67,27 @@ def list_product_services(user: User, db: Session):
     products = list_product_repo(user, db)
 
     if products is None:
-        raise HTTPException(status_code=401, message="no products found")
+        raise HTTPException(status_code=404, message="no products found")
 
     return products
+
+
+def delete_product_service(id: UUID, user: User, db: Session):
+    products = get_product(user, id, db)
+
+    if products is None:
+        raise HTTPException(status_code=404, message="no products found")
+
+    db.delete(products)
+    db.commit()
+
+    return {"message": "Product deleted successfully"}
+
+
+def get_product_throught_public_id(public_id: str, db: Session):
+    product = get_product_public_id(public_id, db)
+
+    if product is None:
+        raise HTTPException(status_code=404, message="no products found")
+
+    return product

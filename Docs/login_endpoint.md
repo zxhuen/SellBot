@@ -5,7 +5,7 @@ Creates a new user in the application's database if they do not already exist. T
 ## Endpoint
 
 ```http
-POST /add-person
+POST /login
 ```
 
 ## Authentication
