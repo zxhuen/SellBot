@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 from app.Repository.chat_repo.chat_repository import get_messages, get_session_token
-from app.models import ChatSession
+from app.models.ChatSession import ChatSession
 from app.models.Product import Product
 from app.schemas import PersonCreate
 from fastapi import HTTPException, Response
@@ -28,7 +28,7 @@ def initialize_chat_session(
             role="assistant",
             content="Hi! Welcome! I'm Luna, and I'm here to help answer your questions and guide you through anything you need. Just send me a message to get started!",
         )
-
+        cookie = chat_session.session_token
         db.add(first_message)
         db.commit()
         db.refresh(first_message)
@@ -36,9 +36,9 @@ def initialize_chat_session(
     session_chat = get_session_token(cookie, db)
 
     if session_chat is None:
-        raise HTTPException(status_code=404, message="no chat session found")
+        raise HTTPException(status_code=404, detail="no chat session found")
 
-    chats = load_chats(session_chat.id)
+    chats = load_chats(session_chat.id, db)
 
     return chats
 

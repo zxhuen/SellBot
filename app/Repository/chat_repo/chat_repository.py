@@ -1,4 +1,5 @@
-from app.models import ChatSession, Message
+from app.models.ChatSession import ChatSession
+from app.models.Message import Message
 from app.models.User import User
 from sqlalchemy.orm import Session
 from sqlalchemy import select
