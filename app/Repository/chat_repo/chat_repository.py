@@ -28,3 +28,23 @@ def get_messages(session_id: UUID, db: Session):
     result = db.execute(stmt)
 
     return result.scalars().all()
+
+
+def get_chat_session(cookie: str, db: Session):
+    print("COOKIE:", repr(cookie))
+
+    stmt = (
+        select(ChatSession)
+        .options(joinedload(ChatSession.product))
+        .where(
+            ChatSession.session_token == cookie,
+        )
+    )
+
+    result = db.execute(stmt)
+
+    chat_session = result.scalars().first()
+
+    print("CHAT SESSION:", chat_session)
+
+    return chat_session

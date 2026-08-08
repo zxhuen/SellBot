@@ -1,19 +1,27 @@
 from uuid import UUID
 
 from sqlalchemy.orm import Session
-from app.Repository.chat_repo.chat_repository import get_messages, get_session_token
+from app.Repository.chat_repo.chat_repository import (
+    get_chat_session,
+    get_messages,
+    get_session_token,
+)
+from app.ai.content_generation.chat_generation import chat_generate
+from app.ai.prompt_generator.memory_generator import generate_memory_prompt
 from app.models.ChatSession import ChatSession
 from app.models.Product import Product
 from app.schemas import PersonCreate
-from fastapi import HTTPException, Response
+from fastapi import Cookie, HTTPException, Response
 import logging
 from app.core.supabse_bucket import supabase
 from app.models.User import User
 from app.models.User_Usage import UserUsage
+from app.models.Message import Message
 import secrets
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.Message import Message
+from app.schemas.chat_schema import ChatCreate
 
 
 def initialize_chat_session(
@@ -50,9 +58,9 @@ def set_visitor_cookie(response: Response) -> str:
         key="visitor_token",
         value=visitor_token,
         httponly=True,
-        secure=False,  # False during local development if not using HTTPS
-        samesite="lax",
-        max_age=60 * 60 * 24 * 365,  # 1 year
+        secure=True,  # MUST be True when samesite="none"
+        samesite="none",  # Required for cross-site POST requests
+        max_age=60 * 60 * 24 * 365,
     )
 
     return visitor_token
@@ -87,3 +95,42 @@ def create_chat_session(public_id: str, visitor_token: str, db: Session):
 
 def load_chats(chat_session_id: UUID, db: Session):
     return get_messages(chat_session_id, db)
+
+
+async def send_chat(chat: ChatCreate, cookie: str, db: Session):
+    chat_session = get_chat_session(cookie, db)
+
+    if chat_session is None:
+        raise HTTPException(status_code=404, detail="No chat session found")
+
+    try:
+        message_history = get_messages(chat_session.id, db)
+
+        llm_messages = [
+            {"role": message.role, "content": message.content}
+            for message in message_history
+        ]
+
+        user_message = Message(
+            chat_session_id=chat_session.id, role="User", content=chat.message
+        )
+        db.add(user_message)
+
+        generated_prompt = generate_memory_prompt(
+            chat_session.product, llm_messages, chat.message
+        )
+
+        response = await chat_generate(generated_prompt)
+
+        llm_message = Message(
+            chat_session_id=chat_session.id, role="Assistant", content=response
+        )
+        db.add(llm_message)
+
+        db.commit()
+
+        return response
+
+    except Exception:
+        db.rollback()
+        raise

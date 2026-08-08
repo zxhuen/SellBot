@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class ChatCreate(BaseModel):
-    public_id: str
     message: str = Field(max_length=500)
 
 
