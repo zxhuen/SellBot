@@ -25,28 +25,34 @@ from app.schemas.chat_schema import ChatCreate
 
 
 def initialize_chat_session(
-    public_id: str, response: Response, cookie: str, db: Session
+    public_id: str,
+    response: Response,
+    cookie: str | None,
+    db: Session,
 ):
     if cookie is None:
-        session_token = set_visitor_cookie(response)
+        cookie = set_visitor_cookie(response)
 
-        chat_session = create_chat_session(public_id, session_token, db)
+    session_chat = get_session_token(cookie, public_id, db)
+
+    if session_chat is None:
+        session_chat = create_chat_session(
+            public_id,
+            cookie,
+            db,
+        )
+
         first_message = Message(
-            chat_session_id=chat_session.id,
+            chat_session_id=session_chat.id,
             role="assistant",
             content="Hi! Welcome! I'm Luna, and I'm here to help answer your questions and guide you through anything you need. Just send me a message to get started!",
         )
-        cookie = chat_session.session_token
+
         db.add(first_message)
         db.commit()
-        db.refresh(first_message)
+        db.refresh(session_chat)
 
-    session_chat = get_session_token(cookie, db)
-
-    if session_chat is None:
-        raise HTTPException(status_code=404, detail="no chat session found")
-
-    chats = load_chats(session_chat.id, db)
+    chats = load_chats(session_chat.id, public_id, db)
 
     return chats
 
@@ -93,18 +99,18 @@ def create_chat_session(public_id: str, visitor_token: str, db: Session):
         raise
 
 
-def load_chats(chat_session_id: UUID, db: Session):
-    return get_messages(chat_session_id, db)
+def load_chats(chat_session_id: UUID, public_id: str, db: Session):
+    return get_messages(chat_session_id, public_id, db)
 
 
-async def send_chat(chat: ChatCreate, cookie: str, db: Session):
-    chat_session = get_chat_session(cookie, db)
+async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
+    chat_session = get_chat_session(cookie, public_id, db)
 
     if chat_session is None:
         raise HTTPException(status_code=404, detail="No chat session found")
 
     try:
-        message_history = get_messages(chat_session.id, db)
+        message_history = get_messages(chat_session.id, public_id, db)
 
         llm_messages = [
             {"role": message.role, "content": message.content}

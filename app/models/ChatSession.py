@@ -36,7 +36,6 @@ class ChatSession(Base):
 
     session_token: Mapped[str] = mapped_column(
         String(255),
-        unique=True,
         nullable=False,
     )
 

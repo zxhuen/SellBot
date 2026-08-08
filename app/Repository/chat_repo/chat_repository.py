@@ -1,6 +1,7 @@
 from app.models.ChatSession import ChatSession
 from app.models.Message import Message
 from app.models.User import User
+from app.models.Product import Product
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -8,9 +9,15 @@ from uuid import UUID
 from fastapi import Response
 
 
-def get_session_token(cookie: str, db: Session):
-    stmt = select(ChatSession).where(
-        ChatSession.session_token == cookie,
+def get_session_token(cookie: str, public_id: str, db: Session):
+    stmt = (
+        select(ChatSession)
+        .options(joinedload(ChatSession.product))
+        .join(ChatSession.product)
+        .where(
+            ChatSession.session_token == cookie,
+            Product.public_id == public_id,
+        )
     )
 
     result = db.execute(stmt)
@@ -18,7 +25,7 @@ def get_session_token(cookie: str, db: Session):
     return result.scalars().first()
 
 
-def get_messages(session_id: UUID, db: Session):
+def get_messages(session_id: UUID, public_id: str, db: Session):
     stmt = (
         select(Message)
         .where(Message.chat_session_id == session_id)
@@ -30,14 +37,16 @@ def get_messages(session_id: UUID, db: Session):
     return result.scalars().all()
 
 
-def get_chat_session(cookie: str, db: Session):
+def get_chat_session(cookie: str, public_id: str, db: Session):
     print("COOKIE:", repr(cookie))
 
     stmt = (
         select(ChatSession)
         .options(joinedload(ChatSession.product))
+        .join(ChatSession.product)
         .where(
             ChatSession.session_token == cookie,
+            Product.public_id == public_id,
         )
     )
 

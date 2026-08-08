@@ -15,10 +15,11 @@ router = APIRouter(prefix="/Chat", tags=["Chat"])
 async def chat_luna(
     request: Request,
     chat: ChatCreate,
+    public_id: str,
     visitor_token: str | None = Cookie(default=None),
     db: Session = Depends(get_db),
 ):
-    return await send_chat(chat, visitor_token, db)
+    return await send_chat(chat, public_id, visitor_token, db)
 
 
 @router.get("/Load-Chat")
