@@ -1,111 +1,120 @@
 # Chat Endpoint
 
-This document describes the `app/api/chatbot.py` chat API surface in the SellBot application.
+This document describes the chat API in the SellBot application, centered on the routes defined in [app/api/chatbot.py](../app/api/chatbot.py).
 
 ## Overview
 
-The chat endpoint exposes two routes under the `/Chat` prefix:
+The chat router is mounted under the `/Chat` prefix and exposes these endpoints:
 
-- `POST /Chat/Luna` - intended for sending chat messages to the Luna chat flow.
-- `GET /Chat/Load-Chat` - loads or initializes a chat session for a public user ID.
+- `POST /Chat/Luna` - sends a user message to the Luna chat flow and returns the assistant response.
+- `GET /Chat/Load-Chat` - loads or initializes a chat session for a given product/public identifier.
 
-Both endpoints use the FastAPI router declared in `app/api/chatbot.py` and share common request context objects such as `Request`, `Response`, and a database session dependency.
+## Shared behavior
+
+Both routes are protected by the application rate limiter:
+
+- `POST /Chat/Luna` is limited to `10/minute`
+- `GET /Chat/Load-Chat` is limited to `5/minute`
+
+They also rely on the same core dependencies:
+
+- `public_id` as a required query parameter
+- `visitor_token` as an optional cookie value
+- a database session injected through the app database dependency
 
 ## `POST /Chat/Luna`
 
 ### Purpose
 
-This route is intended to accept a chat message payload and route it through the Luna chat service.
+This endpoint accepts a user message, finds or creates the related chat session, stores the message, generates a response through the chat generation service, and returns the assistant reply.
 
-### Rate limiting
+### Request
 
-- Limited to `10/minute` via the application-level limiter.
+#### Body
 
-### Inputs
+The request body must match the `ChatCreate` schema:
 
-- `chat` (body): expected to conform to the `ChatCreate` schema from `app/schemas/chat_schema.py`.
-- `session_token` (cookie, optional): a cookie value named `session_token` that can be used to maintain or associate the chat session.
-- `db` (dependency): a SQLAlchemy database session injected by `app.core.database.get_db`.
+```json
+{
+  "message": "Hello Luna"
+}
+```
 
-### Behavior
+#### Query parameters
 
-In the current implementation, the endpoint is defined but its body is not yet implemented. It currently acts as a placeholder for the Luna chat request handler.
+- `public_id` (required): the public identifier of the product associated with the chat session.
 
-### Notes
+#### Cookies
 
-- The route is mounted at `/Chat/Luna`.
-- The route uses FastAPI request and response objects, but it does not currently return a value.
+- `visitor_token` (optional): used to locate the existing chat session. If it is missing, the server creates a new visitor cookie automatically.
+
+### Response
+
+The endpoint returns the generated assistant response as a plain string.
+
+### Backend flow
+
+When the request arrives, the service:
+
+1. looks up the chat session using the visitor token and `public_id`
+2. validates that a session exists
+3. stores the user message
+4. builds a memory-aware prompt
+5. calls the LLM chat generation service
+6. stores the assistant reply and returns it
+
+### Example
+
+```http
+POST /Chat/Luna?public_id=product-123
+Content-Type: application/json
+Cookie: visitor_token=abc123
+
+{
+  "message": "What is this product about?"
+}
+```
 
 ## `GET /Chat/Load-Chat`
 
 ### Purpose
 
-This route loads or initializes an existing chat session for a public user identifier.
+This endpoint loads an existing chat session or creates a new one if none exists for the supplied public identifier.
 
-### Rate limiting
+### Request
 
-- Limited to `5/minute` via the application-level limiter.
+#### Query parameters
 
-### Inputs
+- `public_id` (required): the public identifier for the product chat session.
 
-- `public_id` (query parameter): the public identifier of the user or chat session to load.
-- `session_token` (cookie, optional): a cookie value named `session_token` that is forwarded to session initialization.
-- `db` (dependency): a SQLAlchemy database session injected by `app.core.database.get_db`.
+#### Cookies
 
-### Behavior
+- `visitor_token` (optional): reused if the user already has a session. If missing, the server creates one and stores it in the response cookie.
 
-This endpoint calls `initialize_chat_session(public_id, response, session_token, db)` from `app.services.chat_service.chat_services` and returns its result.
+### Response
 
-The session initialization function is responsible for:
+The endpoint returns the loaded chat history/messages for the session.
 
-- validating or restoring an existing chat session,
-- associating the session with the provided `public_id`,
-- setting any necessary cookies on the response,
-- returning the chat session state to the caller.
+### Backend flow
 
-## Implementation details
+When the request arrives, the service:
 
-- `app/api/chatbot.py` registers an `APIRouter` at the prefix `/Chat` with the tag `Chat`.
-- `initialize_chat_session` is the service function used by `/Chat/Load-Chat`.
-- `ChatCreate` is the request schema currently expected by `/Chat/Luna`.
-- `session_token` is accepted as an optional cookie value for session continuity.
+1. creates or reuses a visitor cookie if needed
+2. resolves the chat session for the provided `public_id`
+3. creates a new session when none exists
+4. inserts an initial assistant welcome message for new sessions
+5. returns the chat history
 
-## Current status
-
-- `/Chat/Load-Chat` is implemented and returns the result of `initialize_chat_session`.
-- `/Chat/Luna` exists as a route definition and has rate limiting applied, but its internal logic still needs to be implemented.
-
-## Usage example
-
-### Load chat session
-
-Request:
+### Example
 
 ```http
-GET /Chat/Load-Chat?public_id=<public_id>
-Cookie: session_token=<token>
+GET /Chat/Load-Chat?public_id=product-123
+Cookie: visitor_token=abc123
 ```
 
-Response:
+## Notes
 
-- JSON payload returned by `initialize_chat_session`
-- may include chat history, session metadata, or updated cookies
-
-### Send chat message (placeholder)
-
-Request:
-
-```http
-POST /Chat/Luna
-Content-Type: application/json
-Cookie: session_token=<token>
-
-{
-  "message": "Hello Luna",
-  "metadata": {...}
-}
-```
-
-Response:
-
-- not yet implemented in the current handler
+- The chat routes are implemented through the service layer in [app/services/chat_service/chat_services.py](../app/services/chat_service/chat_services.py).
+- The request payload schema is defined in [app/schemas/chat_schema.py](../app/schemas/chat_schema.py).
+- The initial assistant greeting is created automatically for brand-new sessions.
+- If a chat session cannot be found for `POST /Chat/Luna`, the endpoint raises a `404` error with the message `No chat session found`.

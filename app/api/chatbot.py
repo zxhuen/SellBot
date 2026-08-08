@@ -11,7 +11,7 @@ router = APIRouter(prefix="/Chat", tags=["Chat"])
 
 
 @router.post("/Luna")
-@limiter.limit("10/minute")
+@limiter.limit("50/day")
 async def chat_luna(
     request: Request,
     chat: ChatCreate,
@@ -23,7 +23,7 @@ async def chat_luna(
 
 
 @router.get("/Load-Chat")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 def load_chat(
     request: Request,
     response: Response,

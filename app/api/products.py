@@ -40,7 +40,9 @@ async def add_product(
 
 
 @router.get("/list-product", response_model=list[ProductResponse])
+@limiter.limit("20/minute")
 def get_product(
+    request: Request,
     access_token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
