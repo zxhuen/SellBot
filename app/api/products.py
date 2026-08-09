@@ -63,3 +63,14 @@ def get_product_public_id(
     request: Request, public_id: str, db: Session = Depends(get_db)
 ):
     return get_product_throught_public_id(public_id, db)
+
+
+@router.get("/mark-as-sold", response_model=PublicProductResponse)
+@limiter.limit("5/minute")
+def mark_as_sold(
+    request: Request,
+    id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    print()
