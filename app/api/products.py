@@ -16,6 +16,7 @@ from app.services.product_service.product_services import (
     delete_product_service,
     get_product_throught_public_id,
     list_product_services,
+    mark_as_sold_service,
 )
 from app.services.validation_service.validation import (
     get_current_user,
@@ -65,7 +66,7 @@ def get_product_public_id(
     return get_product_throught_public_id(public_id, db)
 
 
-@router.get("/mark-as-sold", response_model=PublicProductResponse)
+@router.get("/mark-as-sold")
 @limiter.limit("5/minute")
 def mark_as_sold(
     request: Request,
@@ -73,4 +74,4 @@ def mark_as_sold(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    print()
+    return mark_as_sold_service(id, user, db)

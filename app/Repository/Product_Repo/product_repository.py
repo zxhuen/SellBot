@@ -1,3 +1,5 @@
+from requests import session
+
 from app.models import Product
 from app.models.User import User
 from sqlalchemy.orm import Session
@@ -29,6 +31,14 @@ def get_product_public_id(public_id: UUID, db: Session):
     stmt = select(Product).where(
         Product.public_id == public_id,
     )
+
+    result = db.execute(stmt)
+
+    return result.scalars().first()
+
+
+def mark_product_as_sold(id: UUID, user: User, db: Session):
+    stmt = select(Product).where(Product.id == id, Product.owner_id == user.id)
 
     result = db.execute(stmt)
 

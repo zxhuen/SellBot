@@ -1,10 +1,12 @@
 from email import message
+from math import prod
 from uuid import uuid4
 from sqlalchemy.orm import Session
 from app.Repository.Product_Repo.product_repository import (
     get_product,
     get_product_public_id,
     list_product_repo,
+    mark_product_as_sold,
 )
 from app.ai.content_generation.product_description_generation import (
     product_description_gemini_response,
@@ -91,3 +93,19 @@ def get_product_throught_public_id(public_id: str, db: Session):
         raise HTTPException(status_code=404, detail="no products found")
 
     return product
+
+
+def mark_as_sold_service(id: UUID, user: User, db: Session):
+    product = mark_product_as_sold(id, user, db)
+
+    if product.status == "Sold":
+        raise HTTPException(status_code=404, detail="Product is already sold")
+
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    product.status = "Sold"
+    db.commit()
+    db.refresh(product)
+
+    return {"mesage": "product is already set as sold"}

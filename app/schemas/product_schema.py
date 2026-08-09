@@ -15,6 +15,7 @@ class ProductResponse(BaseModel):
     description: str
     price: Decimal
     public_id: str
+    status: str
 
     class Config:
         from_attributes = True
