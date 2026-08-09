@@ -196,4 +196,154 @@ Returned when authentication fails or no products are found.
 - Each product receives a unique 12-character `public_id`.
 - The user's daily product creation counter is incremented after a successful product creation.
 - Product creation is limited to **4 requests per minute** by the API rate limiter.
+
+---
+
+# Delete Product
+
+Deletes a product owned by the authenticated user.
+
+## Endpoint
+
+```http
+DELETE /Products/delete-product?id=<product_uuid>
+```
+
+## Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | UUID | Yes | The UUID of the product to delete. Must belong to the authenticated user. |
+
+## Success Response
+
+**200 OK**
+
+```json
+{
+  "message": "Product deleted successfully"
+}
+```
+
+## Possible Errors
+
+### 401 Unauthorized
+
+Returned when the request is not authenticated.
+
+```json
+{
+  "detail": "Not authenticated"
+}
+```
+
+### 404 Not Found
+
+Returned when the requested product does not exist or is not owned by the authenticated user.
+
+```json
+{
+  "detail": "no products found"
+}
+```
+
+---
+
+# Get Product by Public ID
+
+Returns public product details using the product's `public_id`. This endpoint does not require authentication.
+
+## Endpoint
+
+```http
+GET /Products/get-product-public-id?public_id=<public_id>
+```
+
+## Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `public_id` | string | Yes | The public identifier for the product. |
+
+## Success Response
+
+**200 OK**
+
+```json
+{
+  "title": "Wireless Mouse",
+  "description": "Experience smooth and precise navigation with this ergonomic wireless mouse.",
+  "price": 29.99
+}
+```
+
+## Possible Errors
+
+### 404 Not Found
+
+Returned when no product exists with the provided `public_id`.
+
+```json
+{
+  "detail": "no products found"
+}
+```
+
+---
+
+# Mark Product as Sold
+
+Marks a product owned by the authenticated user as sold.
+
+## Endpoint
+
+```http
+GET /Products/mark-as-sold?id=<product_uuid>
+```
+
+## Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | UUID | Yes | The UUID of the product to mark as sold. Must belong to the authenticated user. |
+
+## Success Response
+
+**200 OK**
+
+```json
+{
+  "mesage": "product is already set as sold"
+}
+```
+
+> Note: The current implementation returns the same success payload even when the product is updated to sold. There is a typo in the key (`mesage`).
+
+## Possible Errors
+
+### 401 Unauthorized
+
+Returned when the request is not authenticated.
+
+```json
+{
+  "detail": "Not authenticated"
+}
+```
+
+### 404 Not Found
+
+Returned when the product does not exist, is not owned by the authenticated user, or is already sold.
+
+```json
+{
+  "detail": "Product not found"
+}
+```
+
+```json
+{
+  "detail": "Product is already sold"
+}
+```
 ```
