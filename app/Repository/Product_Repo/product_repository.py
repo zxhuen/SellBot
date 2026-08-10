@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from uuid import UUID
+from app.models.ChatSession import ChatSession
+from app.models.Message import Message
 
 
 def list_product_repo(user: User, db: Session):
@@ -43,3 +45,16 @@ def mark_product_as_sold(id: UUID, user: User, db: Session):
     result = db.execute(stmt)
 
     return result.scalars().first()
+
+
+def list_seller_product_messages(user_id: User, product_id: UUID, db: Session):
+    stmt = (
+        select(ChatSession)
+        .join(ChatSession.product)
+        .options(joinedload(ChatSession.messages))
+        .where(ChatSession.product_id == product_id, Product.owner_id == user_id)
+    )
+
+    result = db.execute(stmt)
+
+    return result.scalars()
