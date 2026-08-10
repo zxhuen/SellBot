@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from app.core.limiter import limiter
 from app.models.User import User
+from app.schemas.user_schema import UserResponse
 from app.services.validation_service.validation import (
     get_current_user,
 )
@@ -8,7 +9,7 @@ from app.services.validation_service.validation import (
 router = APIRouter(prefix="/User", tags=["User"])
 
 
-@router.post("/show-profile")
+@router.get("/show-profile", response_model=UserResponse)
 @limiter.limit("30/minute")
 async def show_profile(
     request: Request,

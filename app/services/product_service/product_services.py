@@ -6,7 +6,6 @@ from app.Repository.Product_Repo.product_repository import (
     get_product,
     get_product_public_id,
     list_product_repo,
-    list_seller_product_messages,
     mark_product_as_sold,
 )
 from app.ai.content_generation.product_description_generation import (
