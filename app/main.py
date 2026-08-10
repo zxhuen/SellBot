@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from app.api import user
 from app.core.database import engine, Base
 
 from app.core.limiter import limiter
@@ -10,6 +11,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.api.Login import router as loginRouter
 from app.api.products import router as productRouter
 from app.api.chatbot import router as chatRouter
+from app.api.user import router as userRouter
 
 app = FastAPI(title="SellBot API")
 
@@ -37,3 +39,4 @@ app.add_middleware(
 app.include_router(loginRouter)
 app.include_router(productRouter)
 app.include_router(chatRouter)
+app.include_router(userRouter)
