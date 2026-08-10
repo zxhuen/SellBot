@@ -110,6 +110,3 @@ def mark_as_sold_service(id: UUID, user: User, db: Session):
     db.refresh(product)
 
     return {"mesage": "product is already set as sold"}
-
-def list_messages(user_id: UUID, product_id: UUID, db: Session):
-    messages = list_seller_product_messages()
