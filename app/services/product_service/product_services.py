@@ -24,6 +24,7 @@ from app.models.User_Usage import UserUsage
 from app.schemas.product_schema import ProductCreate
 from sqlalchemy.exc import SQLAlchemyError
 from uuid import UUID
+from app.models.User_Usage import UserUsage
 
 
 def create_product(product: ProductCreate, user: User, db: Session):
@@ -37,10 +38,23 @@ def create_product(product: ProductCreate, user: User, db: Session):
             public_id=uuid4().hex[:12],
         )
 
-        db.add(new_product)
-        user.usage.products_created_today += 1
+        with db.begin():
+            usage = (
+                db.query(UserUsage)
+                .filter(UserUsage.user_id == user.id)
+                .with_for_update()
+                .one()
+            )
 
-        db.commit()
+            if usage.products_created_today >= user.subscription.daily_product_limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You have reached your daily product creation limit.",
+                )
+
+            db.add(new_product)
+            usage.products_created_today += 1
+
         db.refresh(new_product)
 
         return new_product
