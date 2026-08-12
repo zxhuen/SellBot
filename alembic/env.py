@@ -13,6 +13,7 @@ from app.models import Product
 from app.models import Subscription
 from app.models import User
 from app.models import User_Usage
+from app.models import IdempotencyKey
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
