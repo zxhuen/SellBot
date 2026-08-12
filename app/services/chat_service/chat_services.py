@@ -6,6 +6,7 @@ from app.Repository.chat_repo.chat_repository import (
     get_messages,
     get_session_token,
 )
+from app.Repository.idempotency_repo.idempotency_repository import check_idempotency_key
 from app.ai.content_generation.chat_generation import chat_generate
 from app.ai.prompt_generator.memory_generator import generate_memory_prompt
 from app.models.ChatSession import ChatSession
@@ -22,6 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.Message import Message
 from app.schemas.chat_schema import ChatCreate
+from app.models.IdempotencyKey import IdempotencyKey
 
 
 def initialize_chat_session(
@@ -110,6 +112,12 @@ async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
         raise HTTPException(status_code=404, detail="No chat session found")
 
     try:
+        # check idempotency key
+        idempotency_key = check_idempotency_key(chat.idempotecy_key, chat_session.id)
+
+        if idempotency_key:
+            return idempotency_key.response
+
         message_history = get_messages(chat_session.id, public_id, db)
 
         llm_messages = [
@@ -132,6 +140,11 @@ async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
             chat_session_id=chat_session.id, role="Assistant", content=response
         )
         db.add(llm_message)
+
+        key = IdempotencyKey(
+            key=chat.idempotecy_key, chat_session_id=chat_session.id, response=response
+        )
+        db.add(key)
 
         db.commit()
 
