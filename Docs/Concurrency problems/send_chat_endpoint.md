@@ -109,7 +109,9 @@ now if the user disconnects and the user refresh the page, then the function wil
 I mean I do have a load chat which loads the chat through query and it's completely fine if I didn't add this but why not ? I make application robust enough
 
 
-will implement redis lock tomorrow
+Now for the redis lock, I just created a redis client and modified it so that I could lock a function call, how does it work ? 
+So it locks the function for 30 seconds and and the other request needs to wait for 5 seconds before it could go pass, so what will happen is the QAQA is still preserved and it cannot be QQAA
+
 
 
 
