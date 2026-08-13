@@ -20,3 +20,5 @@ rich
 supabase
 
 google-genai
+
+redis

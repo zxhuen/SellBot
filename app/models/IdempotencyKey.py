@@ -1,7 +1,4 @@
 from __future__ import annotations
-
-from datetime import datetime
-from decimal import Decimal
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -17,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.ChatSession import ChatSession
 
 
 class IdempotencyKey(Base):
