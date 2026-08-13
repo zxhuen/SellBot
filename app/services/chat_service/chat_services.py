@@ -106,14 +106,18 @@ def load_chats(chat_session_id: UUID, public_id: str, db: Session):
     return get_messages(chat_session_id, public_id, db)
 
 
-async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
+async def send_chat_idempotency(
+    chat: ChatCreate, public_id: str, cookie: str, db: Session
+):
 
     chat_session = get_chat_session(cookie, public_id, db)
 
     if chat_session is None:
         raise HTTPException(status_code=404, detail="No chat session found")
 
-    lock = redis_client.lock("chat sending", timeout=30, blocking_timeout=5)
+    lock = redis_client.lock(
+        f"chat sending{chat_session.id}", timeout=30, blocking_timeout=5
+    )
 
     if not lock.acquire():
         raise HTTPException(
@@ -155,6 +159,59 @@ async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
             key=chat.idempotecy_key, chat_session_id=chat_session.id, response=response
         )
         db.add(key)
+
+        db.commit()
+
+        return response
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        lock.release()
+
+
+async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
+
+    chat_session = get_chat_session(cookie, public_id, db)
+
+    if chat_session is None:
+        raise HTTPException(status_code=404, detail="No chat session found")
+
+    lock = redis_client.lock(
+        f"chat sending{chat_session.id}", timeout=30, blocking_timeout=5
+    )
+
+    if not lock.acquire():
+        raise HTTPException(
+            status_code=409,
+            detail="Another product creation is already in progress",
+        )
+
+    try:
+        message_history = get_messages(chat_session.id, public_id, db)
+
+        llm_messages = [
+            {"role": message.role, "content": message.content}
+            for message in message_history
+        ]
+
+        user_message = Message(
+            chat_session_id=chat_session.id, role="User", content=chat.message
+        )
+        db.add(user_message)
+
+        generated_prompt = generate_memory_prompt(
+            chat_session.product, llm_messages, chat.message
+        )
+
+        response = await chat_generate(generated_prompt)
+
+        llm_message = Message(
+            chat_session_id=chat_session.id, role="Assistant", content=response
+        )
+        db.add(llm_message)
 
         db.commit()
 

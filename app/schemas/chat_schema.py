@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class ChatCreate(BaseModel):
     message: str = Field(max_length=500)
-    idempotecy_key: str
+    ##idempotecy_key: str = just add this if you want to use the idempotency shit
 
 
 class PersonResponse(BaseModel):
