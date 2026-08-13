@@ -112,6 +112,8 @@ I mean I do have a load chat which loads the chat through query and it's complet
 Now for the redis lock, I just created a redis client and modified it so that I could lock a function call, how does it work ? 
 So it locks the function for 30 seconds and and the other request needs to wait for 5 seconds before it could go pass, so what will happen is the QAQA is still preserved and it cannot be QQAA
 
+what if the the function call is only 5 seconds ? we have a finally block the release the lock, the 30 seconds is just if something happened to the api and it doesn't process it, then after 30 seconds it will get released because if not, then it will be locked forever lol
+
 
 
 
