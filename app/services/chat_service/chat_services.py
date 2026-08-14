@@ -25,6 +25,7 @@ from app.models.Message import Message
 from app.schemas.chat_schema import ChatCreate
 from app.models.IdempotencyKey import IdempotencyKey
 from app.core.redis import redis_client
+from sqlalchemy.dialects.postgresql import insert
 
 
 def initialize_chat_session(
@@ -86,14 +87,16 @@ def create_chat_session(public_id: str, visitor_token: str, db: Session):
         raise HTTPException(status_code=404, detail="Product not found")
 
     try:
-        chat_session = ChatSession(
-            product_id=product.id,
-            session_token=visitor_token,
+
+        stmt = (
+            insert(ChatSession)
+            .values(product_id=product.id, session_token=visitor_token)
+            .on_conflict_do_nothing(index_elements=["product_id", "session_token"])
+            .returning(ChatSession)
         )
 
-        db.add(chat_session)
+        chat_session = db.execute(stmt).scalar_one_or_none()
         db.commit()
-        db.refresh(chat_session)
 
         return chat_session
 
