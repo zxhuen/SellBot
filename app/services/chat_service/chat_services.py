@@ -77,6 +77,16 @@ def set_visitor_cookie(response: Response) -> str:
 
 
 def create_chat_session(public_id: str, visitor_token: str, db: Session):
+    lock = redis_client.lock(
+        f"chat sending{visitor_token}", timeout=30, blocking_timeout=10
+    )
+
+    if not lock.acquire():
+        raise HTTPException(
+            status_code=409,
+            detail="Another session creation is already in progress",
+        )
+
     product = (
         db.execute(select(Product).where(Product.public_id == public_id))
         .scalars()
@@ -103,6 +113,8 @@ def create_chat_session(public_id: str, visitor_token: str, db: Session):
     except SQLAlchemyError:
         db.rollback()
         raise
+    finally:
+        lock.release()
 
 
 def load_chats(chat_session_id: UUID, public_id: str, db: Session):
