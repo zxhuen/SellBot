@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
+from sqlalchemy import UniqueConstraint
 
 from sqlalchemy import (
     DateTime,
@@ -55,4 +56,12 @@ class ChatSession(Base):
     messages: Mapped[list["Message"]] = relationship(
         back_populates="chat_session",
         cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "product_id",
+            "session_token",
+            name="uq_chat_session_product_token",
+        ),
     )
