@@ -8,6 +8,9 @@ from app.Repository.Product_Repo.product_repository import (
     list_product_repo,
     mark_product_as_sold,
 )
+from app.Repository.chat_session_repository.chat_session_repo import (
+    get_chat_session_count,
+)
 from app.ai.content_generation.product_description_generation import (
     product_description_gemini_response,
 )
@@ -25,3 +28,9 @@ from app.schemas.product_schema import ProductCreate
 from sqlalchemy.exc import SQLAlchemyError
 from uuid import UUID
 from app.models.User_Usage import UserUsage
+
+
+def load_analytics(product_id: UUID, user: User, db: Session):
+    chat_session_count = get_chat_session_count(product_id, user.id, db)
+
+    return {"count": chat_session_count}
