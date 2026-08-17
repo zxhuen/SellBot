@@ -33,4 +33,4 @@ from app.models.User_Usage import UserUsage
 def load_analytics(product_id: UUID, user: User, db: Session):
     chat_session_count = get_chat_session_count(product_id, user.id, db)
 
-    return {"count": chat_session_count}
+    return {"visitors_who_messaged": chat_session_count}
