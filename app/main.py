@@ -12,6 +12,7 @@ from app.api.Login import router as loginRouter
 from app.api.products import router as productRouter
 from app.api.chatbot import router as chatRouter
 from app.api.user import router as userRouter
+from app.api.analytics import router as analyticsRouter
 
 app = FastAPI(title="SellBot API")
 
@@ -40,3 +41,4 @@ app.include_router(loginRouter)
 app.include_router(productRouter)
 app.include_router(chatRouter)
 app.include_router(userRouter)
+app.include_router(analyticsRouter)
