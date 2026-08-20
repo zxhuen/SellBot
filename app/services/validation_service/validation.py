@@ -7,8 +7,6 @@ from app.core.security import oauth2_scheme
 from app.core.database import get_db
 from datetime import UTC, datetime, timedelta
 from app.models.Product import Product
-from app.core.redis import redis_client
-import json
 
 
 def get_current_user(
@@ -24,17 +22,6 @@ def get_current_user(
                 detail="Invalid token.",
             )
 
-        cache_key = f"user:{auth_user.id}"
-        cached_user = redis_client.get(cache_key)
-
-        if cached_user:
-            # Convert cached JSON back into data
-            user_data = json.loads(cached_user)
-
-            # Reconstruct however you want to represent the user
-            # See note below.
-            return user_data
-
         user = (
             db.query(User)
             .filter(User.id == auth_user.id)
@@ -47,19 +34,6 @@ def get_current_user(
                 status_code=401,
                 detail="User not found.",
             )
-
-        # Store in Redis
-        user_data = {
-            "id": str(user.id),
-            # add whatever fields your endpoints actually need
-            "email": user.email,
-        }
-
-        redis_client.set(
-            cache_key,
-            json.dumps(user_data),
-            ex=1800,
-        )
 
         return user
 
