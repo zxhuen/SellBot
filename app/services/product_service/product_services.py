@@ -59,6 +59,10 @@ def create_product(product: ProductCreate, user: User, db: Session):
 
         db.refresh(new_product)
 
+        cache_key = f"user_id:{user.id}"
+
+        redis_client.delete(cache_key)
+
         return new_product
 
     except SQLAlchemyError as e:
