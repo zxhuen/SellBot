@@ -104,6 +104,7 @@ def list_product_services(user: User, db: Session):
 
 
 def delete_product_service(id: UUID, user: User, db: Session):
+
     products = get_product(user, id, db)
 
     if products is None:
@@ -111,6 +112,10 @@ def delete_product_service(id: UUID, user: User, db: Session):
 
     db.delete(products)
     db.commit()
+
+    cache_key = f"user_id:{user.id}"
+
+    redis_client.delete(cache_key)
 
     return {"message": "Product deleted successfully"}
 
