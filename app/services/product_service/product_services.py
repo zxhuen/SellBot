@@ -21,10 +21,12 @@ import logging
 from app.core.supabse_bucket import supabase
 from app.models.User import User
 from app.models.User_Usage import UserUsage
-from app.schemas.product_schema import ProductCreate
+from app.schemas.product_schema import ProductCreate, ProductResponse
 from sqlalchemy.exc import SQLAlchemyError
 from uuid import UUID
 from app.models.User_Usage import UserUsage
+from app.core.redis import redis_client
+import json
 
 
 def create_product(product: ProductCreate, user: User, db: Session):
@@ -80,10 +82,23 @@ async def create_product_with_ai(product: ProductCreate, user: User, db: Session
 
 
 def list_product_services(user: User, db: Session):
+    cache_key = f"user_id:{user.id}"
+    cached_user = redis_client.get(cache_key)
+
+    if cached_user:
+        return json.loads(cached_user)
+
     products = list_product_repo(user, db)
 
     if products is None:
         raise HTTPException(status_code=404, detail="no products found")
+
+    response = [
+        ProductResponse.model_validate(product).model_dump(mode="json")
+        for product in products
+    ]
+
+    redis_client.set(cache_key, json.dumps(response), ex=60 * 60)
 
     return products
 
