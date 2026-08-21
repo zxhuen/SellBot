@@ -10,6 +10,7 @@ from app.models.Product import Product
 from app.core.redis import redis_client
 import json
 from app.models.Subscription import Subscription
+from uuid import UUID
 
 
 def get_current_user(
@@ -32,7 +33,7 @@ def get_current_user(
             cached = json.loads(cached_user)
 
             user = User(
-                id=cached["id"],
+                id=UUID(cached["id"]),
                 email=cached["email"],
                 display_name=cached["display_name"],
                 avatar_url=cached["avatar_url"],
@@ -69,7 +70,7 @@ def get_current_user(
 
         # Store in Redis
         user_data = {
-            "id": user.id,
+            "id": str(user.id),
             "email": user.email,
             "display_name": user.display_name,
             "avatar_url": user.avatar_url,
