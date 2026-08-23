@@ -146,4 +146,8 @@ def mark_as_sold_service(id: UUID, user: User, db: Session):
     db.commit()
     db.refresh(product)
 
+    cache_key = f"user_id:{user.id}"
+
+    redis_client.delete(cache_key)
+
     return {"mesage": "product is already set as sold"}
