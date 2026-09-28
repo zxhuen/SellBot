@@ -14,91 +14,35 @@ from uuid import UUID
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
 ) -> User:
     try:
         response = supabase.auth.get_user(token)
         auth_user = response.user
 
         if auth_user is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token.",
-            )
-
-        cache_key = f"user:{auth_user.id}"
-        cached_user = redis_client.get(cache_key)
-
-        if cached_user:
-            cached = json.loads(cached_user)
-
-            user = User(
-                id=UUID(cached["id"]),
-                email=cached["email"],
-                display_name=cached["display_name"],
-                avatar_url=cached["avatar_url"],
-                subscription_id=cached["subscription_id"],
-            )
-
-            user.usage = UserUsage(
-                user_id=user.id,
-                products_created_today=cached["usage"]["products_created_today"],
-                last_reset_at=datetime.fromisoformat(cached["usage"]["last_reset_at"]),
-            )
-
-            user.subscription = Subscription(
-                id=user.subscription_id,
-                name=cached["subscription"]["name"],
-                max_products=cached["subscription"]["max_products"],
-                daily_product_limit=cached["subscription"]["daily_product_limit"],
-            )
-
-            return user
+            raise HTTPException(401, "Invalid token.")
 
         user = (
             db.query(User)
             .filter(User.id == auth_user.id)
-            .options(joinedload(User.subscription), joinedload(User.usage))
+            .options(
+                joinedload(User.subscription),
+                joinedload(User.usage),
+            )
             .first()
         )
 
         if user is None:
-            raise HTTPException(
-                status_code=401,
-                detail="User not found.",
-            )
-
-        # Store in Redis
-        user_data = {
-            "id": str(user.id),
-            "email": user.email,
-            "display_name": user.display_name,
-            "avatar_url": user.avatar_url,
-            "subscription_id": str(user.subscription_id),
-            "usage": {
-                "products_created_today": user.usage.products_created_today,
-                "last_reset_at": user.usage.last_reset_at.isoformat(),
-            },
-            "subscription": {
-                "name": user.subscription.name,
-                "max_products": user.subscription.max_products,
-                "daily_product_limit": user.subscription.daily_product_limit,
-            },
-        }
-
-        redis_client.set(
-            cache_key,
-            json.dumps(user_data),
-            ex=1800,
-        )
+            raise HTTPException(401, "User not found.")
 
         return user
 
+    except HTTPException:
+        raise
     except Exception:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token.",
-        )
+        raise HTTPException(401, "Invalid or expired token.")
 
 
 def check_usage_validation(user: User, db: Session):
