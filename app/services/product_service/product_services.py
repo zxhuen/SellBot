@@ -40,7 +40,7 @@ def create_product(product: ProductCreate, user: User, db: Session):
             public_id=uuid4().hex[:12],
         )
 
-        with db.begin():
+        with db.begin_nested():
             usage = (
                 db.query(UserUsage)
                 .filter(UserUsage.user_id == user.id)
@@ -57,10 +57,8 @@ def create_product(product: ProductCreate, user: User, db: Session):
             db.add(new_product)
             usage.products_created_today += 1
 
-        db.refresh(new_product)
-
+        # Savepoint successfully passed, now handle Redis cache
         cache_key = f"user_id:{user.id}"
-
         redis_client.delete(cache_key)
 
         return new_product
