@@ -67,6 +67,7 @@ def create_product(product: ProductCreate, user: User, db: Session):
 
     except SQLAlchemyError as e:
         db.rollback()
+        print(f"EXACT SQLAlchemyError: {type(e).__name__}: {e}")
         raise HTTPException(
             status_code=500,
             detail="Failed to create product.",
