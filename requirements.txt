@@ -22,3 +22,5 @@ supabase
 google-genai
 
 redis
+
+psycopg
