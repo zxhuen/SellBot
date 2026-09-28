@@ -8,7 +8,7 @@ from app.core.security import oauth2_scheme
 router = APIRouter(prefix="/Login", tags=["Login"])
 
 
-@router.post("/")
+@router.post("/Sign-in")
 @limiter.limit("5/minute")
 def add_person(
     request: Request,
