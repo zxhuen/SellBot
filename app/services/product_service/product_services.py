@@ -57,7 +57,8 @@ def create_product(product: ProductCreate, user: User, db: Session):
             db.add(new_product)
             usage.products_created_today += 1
 
-        # Savepoint successfully passed, now handle Redis cache
+        db.commit()
+
         cache_key = f"user_id:{user.id}"
         redis_client.delete(cache_key)
 
