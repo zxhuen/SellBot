@@ -13,6 +13,7 @@ from app.api.products import router as productRouter
 from app.api.chatbot import router as chatRouter
 from app.api.user import router as userRouter
 from app.api.analytics import router as analyticsRouter
+from app.api.cron import router as cronRouter
 
 app = FastAPI(title="SellBot API")
 
@@ -42,3 +43,4 @@ app.include_router(productRouter)
 app.include_router(chatRouter)
 app.include_router(userRouter)
 app.include_router(analyticsRouter)
+app.include_router(cronRouter)
