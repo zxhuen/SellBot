@@ -198,10 +198,11 @@ async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
         f"chat sending{chat_session.id}", timeout=30, blocking_timeout=5
     )
 
+    # acquire == true if nobody currently holds the lock
     if not lock.acquire():
         raise HTTPException(
             status_code=409,
-            detail="Another product creation is already in progress",
+            detail="Another message is currently being processed",
         )
 
     try:
