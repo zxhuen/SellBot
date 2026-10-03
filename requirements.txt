@@ -24,3 +24,5 @@ google-genai
 redis
 
 psycopg
+
+psycopg[binary]
