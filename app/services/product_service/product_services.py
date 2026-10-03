@@ -104,7 +104,7 @@ def list_product_services(user: User, db: Session):
 
     redis_client.set(cache_key, json.dumps(response), ex=60 * 60)
 
-    return products
+    return response
 
 
 def delete_product_service(id: UUID, user: User, db: Session):
