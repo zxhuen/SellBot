@@ -6,13 +6,7 @@ DONE
 
 ### 2. Make Product List Responses Consistent
 
-* Normalize the product-list response so both cache-hit and cache-miss paths return the **same response structure**.
-* Cache hits currently return decoded JSON, while cache misses return ORM objects.
-* Add tests covering:
-
-  * Cache hit
-  * Cache miss
-  * Empty product list
+DONE
 
 ### 3. Handle Redis Failures After Database Commits
 
