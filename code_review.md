@@ -2,11 +2,7 @@
 
 ### 1. Fix the “Mark as Sold” Flow
 
-* Check whether the product exists and belongs to the current user **before** accessing `product.status`.
-* Return a proper **404** when the product does not exist or does not belong to the user.
-* Return a clear response when the product is **already sold**.
-* Standardize product status values. The model currently uses `"available"` while the service writes `"Sold"`.
-* Change the route method from `GET` to `PATCH` or `POST` since this operation modifies product data.
+DONE
 
 ### 2. Make Product List Responses Consistent
 
