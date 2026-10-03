@@ -136,13 +136,14 @@ def get_product_throught_public_id(public_id: str, db: Session):
 def mark_as_sold_service(id: UUID, user: User, db: Session):
     product = mark_product_as_sold(id, user, db)
 
-    if product.status == "Sold":
+    if product is None:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+    if product.status == "sold":
         raise HTTPException(status_code=404, detail="Product is already sold")
 
-    if product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
 
-    product.status = "Sold"
+    product.status = "sold"
     db.commit()
     db.refresh(product)
 
@@ -150,4 +151,4 @@ def mark_as_sold_service(id: UUID, user: User, db: Session):
 
     redis_client.delete(cache_key)
 
-    return {"mesage": "product is already set as sold"}
+    return {"message": "Product marked as sold"}
