@@ -66,7 +66,7 @@ def get_product_public_id(
     return get_product_throught_public_id(public_id, db)
 
 
-@router.get("/mark-as-sold")
+@router.patch("/mark-as-sold")
 @limiter.limit("5/minute")
 def mark_as_sold(
     request: Request,
