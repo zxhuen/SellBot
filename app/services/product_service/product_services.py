@@ -157,18 +157,35 @@ def mark_as_sold_service(id: UUID, user: User, db: Session):
     product = mark_product_as_sold(id, user, db)
 
     if product is None:
-            raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found",
+        )
 
     if product.status == "sold":
-        raise HTTPException(status_code=404, detail="Product is already sold")
+        raise HTTPException(
+            status_code=409,
+            detail="Product is already sold",
+        )
 
+    try:
+        product.status = "sold"
+        db.commit()
+        db.refresh(product)
 
-    product.status = "sold"
-    db.commit()
-    db.refresh(product)
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"SQLAlchemyError: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to mark product as sold.",
+        ) from e
 
     cache_key = f"user_id:{user.id}"
 
-    redis_client.delete(cache_key)
+    try:
+        redis_client.delete(cache_key)
+    except RedisError as e:
+        print(f"Redis cache invalidation failed: {e}")
 
     return {"message": "Product marked as sold"}

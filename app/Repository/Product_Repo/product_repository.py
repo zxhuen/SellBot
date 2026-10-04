@@ -29,6 +29,7 @@ def get_product(user: User, id: UUID, db: Session):
     return result.scalars().first()
 
 
+
 def get_product_public_id(public_id: UUID, db: Session):
     stmt = select(Product).where(
         Product.public_id == public_id,
@@ -38,10 +39,17 @@ def get_product_public_id(public_id: UUID, db: Session):
 
     return result.scalars().first()
 
-
 def mark_product_as_sold(id: UUID, user: User, db: Session):
-    stmt = select(Product).where(Product.id == id, Product.owner_id == user.id)
+    stmt = (
+        select(Product)
+        .where(
+            Product.id == id,
+            Product.owner_id == user.id,
+        )
+        .with_for_update()
+    )
 
     result = db.execute(stmt)
 
     return result.scalars().first()
+
