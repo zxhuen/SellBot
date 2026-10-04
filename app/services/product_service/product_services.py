@@ -27,6 +27,7 @@ from uuid import UUID
 from app.models.User_Usage import UserUsage
 from app.core.redis import redis_client
 import json
+from redis.exceptions import RedisError
 
 
 def create_product(product: ProductCreate, user: User, db: Session):
@@ -60,7 +61,12 @@ def create_product(product: ProductCreate, user: User, db: Session):
         db.commit()
 
         cache_key = f"user_id:{user.id}"
-        redis_client.delete(cache_key)
+
+        try:
+            redis_client.delete(cache_key)
+        except RedisError as e:
+            print(f"Failed to invalidate cache {cache_key}: {e}")
+
 
         return new_product
 
