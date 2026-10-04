@@ -40,6 +40,11 @@ class Product(Base):
 
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
+    contact_link: Mapped[str] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
     public_id: Mapped[str] = mapped_column(
         String(32), unique=True, nullable=False, index=true
     )

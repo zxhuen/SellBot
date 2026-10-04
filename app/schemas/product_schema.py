@@ -1,6 +1,6 @@
 from decimal import Decimal
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class ProductCreate(BaseModel):
@@ -20,6 +20,8 @@ class ProductCreate(BaseModel):
         decimal_places=2,
     )
 
+    social_link: HttpUrl
+
 
 class ProductResponse(BaseModel):
     id: UUID
@@ -37,6 +39,7 @@ class PublicProductResponse(BaseModel):
     title: str
     description: str
     price: Decimal
+    social_link: HttpUrl
 
     class Config:
         from_attributes = True

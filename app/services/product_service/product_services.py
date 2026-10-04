@@ -39,6 +39,7 @@ def create_product(product: ProductCreate, user: User, db: Session):
             description=product.description,
             price=product.price,
             public_id=uuid4().hex[:12],
+            contact_link=product.social_link,
         )
 
         with db.begin_nested():
