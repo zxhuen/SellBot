@@ -114,18 +114,32 @@ def list_product_services(user: User, db: Session):
 
 
 def delete_product_service(id: UUID, user: User, db: Session):
+    try:
+        product = get_product(user, id, db)
 
-    products = get_product(user, id, db)
+        if product is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No product found",
+            )
 
-    if products is None:
-        raise HTTPException(status_code=404, detail="no products found")
+        db.delete(product)
+        db.commit()
 
-    db.delete(products)
-    db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"SQLAlchemyError: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete product.",
+        ) from e
 
     cache_key = f"user_id:{user.id}"
 
-    redis_client.delete(cache_key)
+    try:
+        redis_client.delete(cache_key)
+    except RedisError as e:
+        print(f"Redis cache invalidation failed: {e}")
 
     return {"message": "Product deleted successfully"}
 
