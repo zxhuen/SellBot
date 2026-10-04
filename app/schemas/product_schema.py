@@ -20,7 +20,7 @@ class ProductCreate(BaseModel):
         decimal_places=2,
     )
 
-    social_link: HttpUrl
+    contact_link: HttpUrl
 
 
 class ProductResponse(BaseModel):
@@ -39,7 +39,7 @@ class PublicProductResponse(BaseModel):
     title: str
     description: str
     price: Decimal
-    social_link: HttpUrl
+    contact_link: HttpUrl
 
     class Config:
         from_attributes = True
