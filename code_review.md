@@ -10,10 +10,7 @@ DONE
 
 ### 3. Handle Redis Failures After Database Commits
 
-* Product creation, deletion, and mark-as-sold operations currently commit to the database before deleting the Redis cache.
-* If Redis fails after the database commit, the API may report a failure even though the database operation succeeded.
-* This can cause clients to retry an operation that already succeeded.
-* Decide on a cache strategy, such as **best-effort cache invalidation**, where Redis failures do not cause an otherwise successful database operation to fail.
+DONE
 
 ### 4. Validate Product Input at the API Boundary
 
