@@ -33,9 +33,8 @@ async def chat_luna(
 @limiter.limit("10/minute")
 def load_chat(
     request: Request,
-    response: Response,
     public_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return initialize_chat_session(public_id, response, current_user, db)
+    return initialize_chat_session(public_id, current_user, db)
