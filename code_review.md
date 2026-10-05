@@ -14,16 +14,11 @@ DONE
 
 ### 4. Validate Product Input at the API Boundary
 
+DONE
 
 ### 5. Define AI Failure Behavior During Product Creation
 
-* Product creation currently depends on `revise_description`, an external AI call.
-* Decide what should happen if the AI service fails:
-
-  * **Block creation**, or
-  * **Fall back to the original description**.
-* Add an appropriate timeout and error handling around `revise_description`.
-* Keep this failure policy within the product service layer.
+DONE
 
 ### 6. Add Pagination to Product Lists
 
