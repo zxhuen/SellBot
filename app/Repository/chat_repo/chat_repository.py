@@ -25,7 +25,10 @@ def get_session_token(cookie: str, public_id: str, db: Session):
     return result.scalars().first()
 
 
-def get_messages(session_id: UUID, public_id: str, db: Session):
+def get_messages(
+    session_id: UUID,
+    db: Session,
+):
     stmt = (
         select(Message)
         .where(Message.chat_session_id == session_id)
@@ -37,23 +40,21 @@ def get_messages(session_id: UUID, public_id: str, db: Session):
     return result.scalars().all()
 
 
-def get_chat_session(cookie: str, public_id: str, db: Session):
-    print("COOKIE:", repr(cookie))
-
+def get_chat_session(
+    public_id: str,
+    user_id: UUID,
+    db: Session,
+):
     stmt = (
         select(ChatSession)
-        .options(joinedload(ChatSession.product))
         .join(ChatSession.product)
+        .options(joinedload(ChatSession.product))
         .where(
-            ChatSession.session_token == cookie,
+            ChatSession.user_id == user_id,
             Product.public_id == public_id,
         )
     )
 
     result = db.execute(stmt)
 
-    chat_session = result.scalars().first()
-
-    print("CHAT SESSION:", chat_session)
-
-    return chat_session
+    return result.scalars().first()

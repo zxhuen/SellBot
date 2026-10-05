@@ -30,55 +30,53 @@ from sqlalchemy.dialects.postgresql import insert
 
 def initialize_chat_session(
     public_id: str,
-    response: Response,
-    cookie: str | None,
+    current_user: User,
     db: Session,
 ):
-    if cookie is None:
-        cookie = set_visitor_cookie(response)
-
-    session_chat = get_session_token(cookie, public_id, db)
+    session_chat = get_chat_session(
+        public_id,
+        current_user.id,
+        db,
+    )
 
     if session_chat is None:
         session_chat = create_chat_session(
             public_id,
-            cookie,
+            current_user.id,
             db,
         )
 
         first_message = Message(
             chat_session_id=session_chat.id,
             role="assistant",
-            content="Hi! Welcome! I'm Luna, and I'm here to help answer your questions and guide you through anything you need. Just send me a message to get started!",
+            content=(
+                "Hi! Welcome! I'm Luna, and I'm here to help answer "
+                "your questions and guide you through anything you need. "
+                "Just send me a message to get started!"
+            ),
         )
 
         db.add(first_message)
         db.commit()
         db.refresh(session_chat)
 
-    chats = load_chats(session_chat.id, public_id, db)
-
-    return chats
-
-
-def set_visitor_cookie(response: Response) -> str:
-    visitor_token = secrets.token_urlsafe(32)
-
-    response.set_cookie(
-        key="visitor_token",
-        value=visitor_token,
-        httponly=True,
-        secure=True,  # MUST be True when samesite="none"
-        samesite="none",  # Required for cross-site POST requests
-        max_age=60 * 60 * 24 * 365,
+    return load_chats(
+        session_chat.id,
+        db,
     )
 
-    return visitor_token
 
 
-def create_chat_session(public_id: str, visitor_token: str, db: Session):
+
+def create_chat_session(
+    public_id: str,
+    user_id: UUID,
+    db: Session,
+):
     lock = redis_client.lock(
-        f"chat sending{visitor_token}", timeout=30, blocking_timeout=10
+        f"chat_session:{user_id}:{public_id}",
+        timeout=30,
+        blocking_timeout=10,
     )
 
     if not lock.acquire():
@@ -87,38 +85,48 @@ def create_chat_session(public_id: str, visitor_token: str, db: Session):
             detail="Another session creation is already in progress",
         )
 
-    product = (
-        db.execute(select(Product).where(Product.public_id == public_id))
-        .scalars()
-        .first()
-    )
-
-    if product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-
     try:
-
-        stmt = (
-            insert(ChatSession)
-            .values(product_id=product.id, session_token=visitor_token)
-            .on_conflict_do_nothing(index_elements=["product_id", "session_token"])
-            .returning(ChatSession)
+        product = (
+            db.execute(
+                select(Product).where(Product.public_id == public_id)
+            )
+            .scalars()
+            .first()
         )
 
-        chat_session = db.execute(stmt).scalar_one_or_none()
+        if product is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Product not found",
+            )
+
+        chat_session = ChatSession(
+            user_id=user_id,
+            product_id=product.id,
+        )
+
+        db.add(chat_session)
         db.commit()
+        db.refresh(chat_session)
 
         return chat_session
 
     except SQLAlchemyError:
         db.rollback()
         raise
+
     finally:
         lock.release()
 
 
-def load_chats(chat_session_id: UUID, public_id: str, db: Session):
-    return get_messages(chat_session_id, public_id, db)
+def load_chats(
+    chat_session_id: UUID,
+    db: Session,
+):
+    return get_messages(
+        chat_session_id,
+        db,
+    )
 
 
 async def send_chat_idempotency(
@@ -187,18 +195,30 @@ async def send_chat_idempotency(
         lock.release()
 
 
-async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
-
-    chat_session = get_chat_session(cookie, public_id, db)
-
-    if chat_session is None:
-        raise HTTPException(status_code=404, detail="No chat session found")
-
-    lock = redis_client.lock(
-        f"chat sending{chat_session.id}", timeout=30, blocking_timeout=5
+async def send_chat(
+    chat: ChatCreate,
+    public_id: str,
+    current_user: User,
+    db: Session,
+):
+    chat_session = get_chat_session(
+        public_id,
+        current_user.id,
+        db,
     )
 
-    # acquire == true if nobody currently holds the lock
+    if chat_session is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No chat session found",
+        )
+
+    lock = redis_client.lock(
+        f"chat_sending:{chat_session.id}",
+        timeout=30,
+        blocking_timeout=5,
+    )
+
     if not lock.acquire():
         raise HTTPException(
             status_code=409,
@@ -206,27 +226,41 @@ async def send_chat(chat: ChatCreate, public_id: str, cookie: str, db: Session):
         )
 
     try:
-        message_history = get_messages(chat_session.id, public_id, db)
+        message_history = get_messages(
+            chat_session.id,
+            db,
+        )
 
         llm_messages = [
-            {"role": message.role, "content": message.content}
+            {
+                "role": message.role,
+                "content": message.content,
+            }
             for message in message_history
         ]
 
         user_message = Message(
-            chat_session_id=chat_session.id, role="User", content=chat.message
+            chat_session_id=chat_session.id,
+            role="User",
+            content=chat.message,
         )
+
         db.add(user_message)
 
         generated_prompt = generate_memory_prompt(
-            chat_session.product, llm_messages, chat.message
+            chat_session.product,
+            llm_messages,
+            chat.message,
         )
 
         response = await chat_generate(generated_prompt)
 
         llm_message = Message(
-            chat_session_id=chat_session.id, role="Assistant", content=response
+            chat_session_id=chat_session.id,
+            role="Assistant",
+            content=response,
         )
+
         db.add(llm_message)
 
         db.commit()
