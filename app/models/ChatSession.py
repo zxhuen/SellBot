@@ -30,12 +30,16 @@ class ChatSession(Base):
         default=lambda: str(uuid4()),
     )
 
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
     product_id: Mapped[UUID] = mapped_column(
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
     )
-
-    session_token: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -49,16 +53,15 @@ class ChatSession(Base):
         nullable=False,
     )
 
-    product: Mapped["Product"] = relationship(back_populates="chat_sessions")
+    user: Mapped["User"] = relationship(
+        back_populates="chat_sessions",
+    )
+
+    product: Mapped["Product"] = relationship(
+        back_populates="chat_sessions",
+    )
+
     messages: Mapped[list["Message"]] = relationship(
         back_populates="chat_session",
         cascade="all, delete-orphan",
-    )
-
-    __table_args__ = (
-        UniqueConstraint(
-            "product_id",
-            "session_token",
-            name="uq_chat_session_product_token",
-        ),
     )

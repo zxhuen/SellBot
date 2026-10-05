@@ -42,11 +42,11 @@ class Product(Base):
 
     contact_link: Mapped[str] = mapped_column(
         String(500),
-        nullable=True,
+        nullable=False,
     )
 
     public_id: Mapped[str] = mapped_column(
-        String(32), unique=True, nullable=False, index=true
+        String(32), unique=True, nullable=False, index=True
     )
 
     status: Mapped[str] = mapped_column(
