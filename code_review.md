@@ -14,14 +14,6 @@ DONE
 
 ### 4. Validate Product Input at the API Boundary
 
-* Add Pydantic validation to `product_schema.py`.
-* Validate:
-
-  * Title length against the database's 255-character limit.
-  * Description length.
-  * Price range.
-  * Price precision to two decimal places.
-* Invalid input should return a useful **422 validation error** instead of reaching the database and producing a database error.
 
 ### 5. Define AI Failure Behavior During Product Creation
 

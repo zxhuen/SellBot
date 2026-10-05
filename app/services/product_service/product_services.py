@@ -28,6 +28,7 @@ from app.models.User_Usage import UserUsage
 from app.core.redis import redis_client
 import json
 from redis.exceptions import RedisError
+import asyncio
 
 
 def create_product(product: ProductCreate, user: User, db: Session):
@@ -85,10 +86,27 @@ async def revise_description(description: str):
     response = await product_description_gemini_response(revised_description)
     return response
 
+AI_DESCRIPTION_TIMEOUT = 10
 
 async def create_product_with_ai(product: ProductCreate, user: User, db: Session):
-    improvised_description = await revise_description(product.description)
-    product.description = improvised_description
+    try:
+        improvised_description = await asyncio.wait_for(
+            revise_description(product.description),
+            timeout=AI_DESCRIPTION_TIMEOUT,
+        )
+
+        product.description = improvised_description
+
+    except asyncio.TimeoutError:
+        print("AI description revision timed out. Using original description.")
+
+    except Exception as e:
+        print(
+            f"AI description revision failed: "
+            f"{type(e).__name__}: {e}. "
+            "Using original description."
+        )
+
     return create_product(product, user, db)
 
 
