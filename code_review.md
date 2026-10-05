@@ -30,14 +30,11 @@ DONE
   * Cursor-based pagination.
 * Add a stable sort order so pagination produces predictable results.
 
+(not gonna do this yet)
+
 ### 7. Clean Up the Product Service
 
-After the behavioral changes and tests are complete:
-
-* Remove duplicate imports.
-* Remove unused imports.
-* Fix the `"mesage"` typo in response keys.
-* Perform general cleanup without changing behavior unnecessarily.
+DONE
 
 ## Suggested Order
 
