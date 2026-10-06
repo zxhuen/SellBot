@@ -12,4 +12,4 @@ router = APIRouter(prefix="/Buyer", tags=["Buyer"])
 
 @router.get("/List-Chat-Sessions")
 async def list_chat_sessions(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return get_chat_sessions(db, user)
+    return get_chat_sessions(db, user.id)
