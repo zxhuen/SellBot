@@ -26,6 +26,7 @@ from app.schemas.chat_schema import ChatCreate
 from app.models.IdempotencyKey import IdempotencyKey
 from app.core.redis import redis_client
 from sqlalchemy.dialects.postgresql import insert
+from datetime import datetime, timezone
 
 
 def initialize_chat_session(
@@ -262,6 +263,8 @@ async def send_chat(
         )
 
         db.add(llm_message)
+
+        chat_session.last_message_at = datetime.now(timezone.utc)
 
         db.commit()
 
