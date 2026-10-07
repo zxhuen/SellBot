@@ -14,11 +14,13 @@ from app.ai.prompt_generator.product_description_generator import (
     generate_product_desc_prompt,
 )
 from app.core.redis import redis_client
+from app.models.ChatSession import ChatSession
 from app.models.Product import Product
 from app.models.User import User
 from app.models.User_Usage import UserUsage
 from app.Repository.Product_Repo.product_repository import (
     get_product,
+    get_product_chat_session,
     get_product_public_id,
     list_product_repo,
     mark_product_as_sold,
@@ -209,3 +211,26 @@ def mark_as_sold_service(id: UUID, user: User, db: Session):
         print(f"Redis cache invalidation failed: {e}")
 
     return {"message": "Product marked as sold"}
+
+def get_product_chat_session_service(
+    product_id: UUID,
+    current_user: User,
+    db: Session,
+):
+
+    chat_session = get_product_chat_session(
+        db=db,
+        product_id=product_id,
+        user_id=current_user.id,
+    )
+
+    if chat_session is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No chat session found for this product",
+        )
+
+    return chat_session
+
+
+

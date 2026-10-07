@@ -53,3 +53,26 @@ def mark_product_as_sold(id: UUID, user: User, db: Session):
 
     return result.scalars().first()
 
+
+def get_product_chat_session(
+    db: Session,
+    product_id: UUID,
+    user_id: UUID,
+):
+
+    stmt = (
+    select(ChatSession)
+    .options(
+        joinedload(ChatSession.product),
+        joinedload(ChatSession.user),
+    )
+    .where(
+        ChatSession.product_id == product_id,
+        ChatSession.product.has(Product.owner_id == user_id),
+    )
+)
+
+    result = db.execute(stmt)
+
+    return result.scalars().all()
+

@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
+from app.Repository.Product_Repo.product_repository import get_product_chat_session
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.schemas.product_schema import (
+    ChatSessionProductResponse,
     ProductCreate,
     ProductResponse,
     PublicProductResponse,
@@ -14,6 +16,7 @@ from uuid import UUID
 from app.services.product_service.product_services import (
     create_product_with_ai,
     delete_product_service,
+    get_product_chat_session_service,
     get_product_throught_public_id,
     list_product_services,
     mark_as_sold_service,
@@ -75,3 +78,14 @@ def mark_as_sold(
     db: Session = Depends(get_db),
 ):
     return mark_as_sold_service(id, user, db)
+
+
+@router.get("/get-product-history", response_model=list[ChatSessionProductResponse])
+@limiter.limit("6/minute")
+def get_product_history(
+    request: Request,
+    product_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_product_chat_session_service(product_id, user, db)
