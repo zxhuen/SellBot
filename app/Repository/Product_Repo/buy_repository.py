@@ -17,7 +17,10 @@ def get_user_chat_sessions(
 
     stmt = (
         select(ChatSession)
-        .options(joinedload(ChatSession.product))
+        .options(
+            joinedload(ChatSession.product)
+            .joinedload(Product.owner),
+        )
         .where(ChatSession.user_id == user_id)
         .order_by(ChatSession.last_message_at.desc())
     )
@@ -25,5 +28,8 @@ def get_user_chat_sessions(
     result = db.execute(stmt)
 
     return result.scalars().all()
+
+
+
 
 
