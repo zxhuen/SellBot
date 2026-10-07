@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.core.limiter import limiter
 from app.schemas.product_schema import (
     ChatSessionProductResponse,
+    ChatSessionResponse,
     ProductCreate,
     ProductResponse,
     PublicProductResponse,
@@ -80,7 +81,7 @@ def mark_as_sold(
     return mark_as_sold_service(id, user, db)
 
 
-@router.get("/get-product-history", response_model=list[ChatSessionProductResponse])
+@router.get("/get-product-history", response_model=list[ChatSessionResponse])
 @limiter.limit("6/minute")
 def get_product_history(
     request: Request,
