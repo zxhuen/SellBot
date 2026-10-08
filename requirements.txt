@@ -26,3 +26,5 @@ redis
 psycopg
 
 psycopg[binary]
+sqlalchemy[asyncio]
+asyncpg

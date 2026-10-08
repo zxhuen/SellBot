@@ -15,3 +15,7 @@ class PersonResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MessageResponse(BaseModel):
+    content: str
+    role: str

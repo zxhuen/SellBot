@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DATABASE_PASSWORD: str
     GEMINI_API_KEY: str
     REDIS_KEY: str
+    ASYNC_DATABASE_URL: str
 
     class Config:
         env_file = ".env"

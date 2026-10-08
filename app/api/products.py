@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from app.Repository.Product_Repo.product_repository import get_product_chat_session
-from app.core.database import get_db
+from app.core.database import async_get_db, get_db
 from app.core.limiter import limiter
+from app.schemas.chat_schema import MessageResponse
 from app.schemas.product_schema import (
     ChatSessionProductResponse,
     ChatSessionResponse,
@@ -20,12 +21,15 @@ from app.services.product_service.product_services import (
     get_product_chat_session_service,
     get_product_throught_public_id,
     list_product_services,
+    load_chat_messages,
     mark_as_sold_service,
 )
 from app.services.validation_service.validation import (
     get_current_user,
     check_usage_validation,
 )
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/Products", tags=["Products"])
 
@@ -90,3 +94,17 @@ def get_product_history(
     db: Session = Depends(get_db),
 ):
     return get_product_chat_session_service(product_id, user, db)
+
+@router.get("/get-chat-messages", response_model=list[MessageResponse])
+@limiter.limit("10/minute")
+async def fetch_chat_messages(
+    request: Request,
+    chat_session_id: UUID,
+    db: AsyncSession = Depends(async_get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return await load_chat_messages(
+        db=db,
+        chat_session_id=chat_session_id,
+        user_id=current_user.id,
+    )

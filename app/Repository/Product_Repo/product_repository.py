@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 from uuid import UUID
 from app.models.ChatSession import ChatSession
 from app.models.Message import Message
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def list_product_repo(user: User, db: Session):
@@ -76,3 +77,21 @@ def get_product_chat_session(
 
     return result.scalars().all()
 
+
+async def get_chat_messages(
+    db: AsyncSession,
+    chat_session_id: UUID,
+    user_id: UUID,
+):
+    stmt = (
+        select(Message)
+        .join(Message.chat_session)
+        .where(
+            Message.chat_session_id == chat_session_id,
+            ChatSession.user_id == user_id,
+        )
+        .order_by(Message.created_at.asc())
+    )
+
+    result = await db.execute(stmt)
+    return result.scalars().all()

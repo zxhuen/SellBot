@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from redis.exceptions import RedisError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.content_generation.product_description_generation import (
     product_description_gemini_response,
@@ -19,6 +20,7 @@ from app.models.Product import Product
 from app.models.User import User
 from app.models.User_Usage import UserUsage
 from app.Repository.Product_Repo.product_repository import (
+    get_chat_messages,
     get_product,
     get_product_chat_session,
     get_product_public_id,
@@ -231,6 +233,26 @@ def get_product_chat_session_service(
         )
 
     return chat_session
+
+
+async def load_chat_messages(
+    db: AsyncSession,
+    chat_session_id: UUID,
+    user_id: UUID,
+):
+    messages = await get_chat_messages(
+        db=db,
+        chat_session_id=chat_session_id,
+        user_id=user_id,
+    )
+
+    if not messages:
+        raise HTTPException(
+            status_code=404,
+            detail="No messages found for this chat session.",
+        )
+
+    return messages
 
 
 

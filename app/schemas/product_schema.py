@@ -59,10 +59,11 @@ class ChatSessionUserResponse(BaseModel):
         from_attributes = True
 
 class ChatSessionResponse(BaseModel):
+    id: UUID
     product: ChatSessionProductResponse
     user: ChatSessionUserResponse
     last_message_at: datetime
-
+    
     class Config:
         from_attributes = True
 
