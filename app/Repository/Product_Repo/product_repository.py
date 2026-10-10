@@ -1,5 +1,3 @@
-from requests import session
-
 from app.models import Product
 from app.models.User import User
 from sqlalchemy.orm import Session
