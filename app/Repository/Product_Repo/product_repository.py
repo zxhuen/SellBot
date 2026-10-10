@@ -86,9 +86,10 @@ async def get_chat_messages(
     stmt = (
         select(Message)
         .join(Message.chat_session)
+        .join(ChatSession.product)
         .where(
             Message.chat_session_id == chat_session_id,
-            ChatSession.user_id == user_id,
+            Product.owner_id == user_id,
         )
         .order_by(Message.created_at.asc())
     )
