@@ -226,7 +226,7 @@ def get_product_chat_session_service(
         user_id=current_user.id,
     )
 
-    if chat_session is None:
+    if not chat_session:
         raise HTTPException(
             status_code=404,
             detail="No chat session found for this product",
