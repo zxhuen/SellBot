@@ -1,12 +1,13 @@
 from app.models import Product
 from app.models.User import User
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.orm import joinedload
 from uuid import UUID
 from app.models.ChatSession import ChatSession
 from app.models.Message import Message
 from sqlalchemy.ext.asyncio import AsyncSession
+
 
 
 def list_product_repo(user: User, db: Session):
@@ -58,22 +59,18 @@ def get_product_chat_session(
     product_id: UUID,
     user_id: UUID,
 ):
-
     stmt = (
-    select(ChatSession)
-    .options(
-        joinedload(ChatSession.product),
-        joinedload(ChatSession.user),
+        select(ChatSession)
+        .options(
+            joinedload(ChatSession.product),
+            joinedload(ChatSession.user),
+        )
+        .where(
+            ChatSession.product_id == product_id,
+            ChatSession.product.has(Product.owner_id == user_id),
+        )
+        .order_by(desc(ChatSession.last_message_at))
     )
-    .where(
-        ChatSession.product_id == product_id,
-        ChatSession.product.has(Product.owner_id == user_id),
-    )
-)
-
-    result = db.execute(stmt)
-
-    return result.scalars().all()
 
 
 async def get_chat_messages(
