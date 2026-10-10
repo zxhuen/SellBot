@@ -72,6 +72,10 @@ def get_product_chat_session(
         .order_by(desc(ChatSession.last_message_at))
     )
 
+    result = db.execute(stmt)
+    return result.scalars().all()
+
+
 
 async def get_chat_messages(
     db: AsyncSession,
