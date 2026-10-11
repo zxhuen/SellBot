@@ -1,7 +1,7 @@
 from app.models import Product
 from app.models.User import User
 from sqlalchemy.orm import Session
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func
 from sqlalchemy.orm import joinedload
 from uuid import UUID
 from app.models.ChatSession import ChatSession
@@ -95,3 +95,22 @@ async def get_chat_messages(
 
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+def get_user_product_chat_sessions(
+    db: Session,
+    user_id: UUID,
+    offset: int = 0,
+    limit: int = 10,
+) -> list[ChatSession]:
+    stmt = (
+        select(ChatSession)
+        .join(ChatSession.product)
+        .options(joinedload(ChatSession.product))
+        .where(Product.owner_id == user_id)
+        .order_by(ChatSession.created_at.desc(), ChatSession.id.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+
+    return db.scalars(stmt).all()
