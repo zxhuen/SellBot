@@ -106,7 +106,10 @@ def get_user_product_chat_sessions(
     stmt = (
         select(ChatSession)
         .join(ChatSession.product)
-        .options(joinedload(ChatSession.product))
+        .options(
+            joinedload(ChatSession.product),
+            joinedload(ChatSession.user),
+        )
         .where(Product.owner_id == user_id)
         .order_by(ChatSession.created_at.desc(), ChatSession.id.desc())
         .offset(offset)

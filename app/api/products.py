@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, Query
 from sqlalchemy.orm import Session
 from app.Repository.Product_Repo.product_repository import get_product_chat_session
 from app.core.database import async_get_db, get_db
@@ -18,6 +18,7 @@ from uuid import UUID
 from app.services.product_service.product_services import (
     create_product_with_ai,
     delete_product_service,
+    get_customer_chat_sessions_service,
     get_product_chat_session_service,
     get_product_throught_public_id,
     list_product_services,
@@ -107,4 +108,19 @@ async def fetch_chat_messages(
         db=db,
         chat_session_id=chat_session_id,
         user_id=current_user.id,
+    )
+
+
+@router.get("/Customer-Chats", response_model=list[ChatSessionResponse])
+def get_customer_chats(
+    offset: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=10),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_customer_chat_sessions_service(
+        db=db,
+        user_id=current_user.id,
+        offset=offset,
+        limit=limit,
     )

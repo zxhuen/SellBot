@@ -24,6 +24,7 @@ from app.Repository.Product_Repo.product_repository import (
     get_product,
     get_product_chat_session,
     get_product_public_id,
+    get_user_product_chat_sessions,
     list_product_repo,
     mark_product_as_sold,
 )
@@ -254,7 +255,19 @@ async def load_chat_messages(
 
     return messages
 
-    
+
+def get_customer_chat_sessions_service(
+    db: Session,
+    user_id: UUID,
+    offset: int = 0,
+    limit: int = 10,
+) -> list[ChatSession]:
+    return get_user_product_chat_sessions(
+        db=db,
+        user_id=user_id,
+        offset=offset,
+        limit=limit,
+    )
 
 
 
