@@ -116,4 +116,5 @@ async def get_user_product_chat_sessions(
         .limit(limit)
     )
 
-    return await db.scalars(stmt).all()
+    result = await db.scalars(stmt)
+    return result.all()
