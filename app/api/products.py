@@ -112,13 +112,13 @@ async def fetch_chat_messages(
 
 
 @router.get("/Customer-Chats", response_model=list[ChatSessionResponse])
-def get_customer_chats(
+async def get_customer_chats(
     offset: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=10),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(async_get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return get_customer_chat_sessions_service(
+    return await get_customer_chat_sessions_service(
         db=db,
         user_id=current_user.id,
         offset=offset,

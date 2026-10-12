@@ -256,13 +256,13 @@ async def load_chat_messages(
     return messages
 
 
-def get_customer_chat_sessions_service(
-    db: Session,
+async def get_customer_chat_sessions_service(
+    db: AsyncSession,
     user_id: UUID,
     offset: int = 0,
     limit: int = 10,
 ) -> list[ChatSession]:
-    return get_user_product_chat_sessions(
+    return await get_user_product_chat_sessions(
         db=db,
         user_id=user_id,
         offset=offset,

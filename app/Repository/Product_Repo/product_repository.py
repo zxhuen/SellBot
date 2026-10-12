@@ -95,10 +95,10 @@ async def get_chat_messages(
 
     result = await db.execute(stmt)
     return result.scalars().all()
+    
 
-
-def get_user_product_chat_sessions(
-    db: Session,
+async def get_user_product_chat_sessions(
+    db: AsyncSession,
     user_id: UUID,
     offset: int = 0,
     limit: int = 10,
@@ -116,4 +116,4 @@ def get_user_product_chat_sessions(
         .limit(limit)
     )
 
-    return db.scalars(stmt).all()
+    return await db.scalars(stmt).all()
