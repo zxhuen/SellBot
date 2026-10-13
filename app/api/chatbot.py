@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Depends, Response, Cookie
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.limiter import limiter
-from app.schemas.chat_schema import ChatCreate
+from app.schemas.chat_schema import ChatCreate, MessageResponse
 from app.services.chat_service.chat_services import initialize_chat_session, send_chat
 from app.services.login_service.login import login_user
 from app.core.security import oauth2_scheme
@@ -29,7 +29,7 @@ async def chat_luna(
     )
 
 
-@router.get("/Load-Chat")
+@router.get("/Load-Chat", response_model=list[MessageResponse])
 @limiter.limit("10/minute")
 def load_chat(
     request: Request,

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-
+from datetime import datetime
+from uuid import UUID
 
 class ChatCreate(BaseModel):
     message: str = Field(max_length=500)
@@ -16,6 +17,12 @@ class PersonResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class MessageResponse(BaseModel):
-    content: str
+    id: UUID
     role: str
+    content: str
+    created_at: datetime
+
+    class Config:
+            from_attributes = True
