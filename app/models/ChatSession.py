@@ -65,3 +65,11 @@ class ChatSession(Base):
         back_populates="chat_session",
         cascade="all, delete-orphan",
     )
+
+    __table_args__ = (
+    UniqueConstraint(
+        "user_id",
+        "product_id",
+        name="uq_chat_session_user_product",
+     ),
+    )   

@@ -18,3 +18,19 @@ def get_chat_session_count(product_id: UUID, user_id: UUID, db: Session):
             Product.owner_id == user_id,
         )
     )
+
+def get_chat_session_by_user_and_product(
+    user_id: UUID,
+    product_id: UUID,
+    db: Session,
+) -> ChatSession | None:
+    return (
+        db.execute(
+            select(ChatSession).where(
+                ChatSession.user_id == user_id,
+                ChatSession.product_id == product_id,
+            )
+        )
+        .scalars()
+        .first()
+    )

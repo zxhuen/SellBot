@@ -6,13 +6,14 @@ from app.Repository.chat_repo.chat_repository import (
     get_messages,
     get_session_token,
 )
+from app.Repository.chat_session_repository.chat_session_repo import get_chat_session_by_user_and_product
 from app.Repository.idempotency_repo.idempotency_repository import check_idempotency_key
 from app.ai.content_generation.chat_generation import chat_generate
 from app.ai.prompt_generator.memory_generator import generate_memory_prompt
 from app.models.ChatSession import ChatSession
 from app.models.Product import Product
 from app.schemas import PersonCreate
-from fastapi import Cookie, HTTPException, Response
+from fastapi import Cookie, HTTPException, Response, logger
 import logging
 from app.core.supabse_bucket import supabase
 from app.models.User import User
@@ -27,7 +28,8 @@ from app.models.IdempotencyKey import IdempotencyKey
 from app.core.redis import redis_client
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timezone
-
+from redis.exceptions import LockError
+from sqlalchemy.exc import IntegrityError
 
 def initialize_chat_session(
     public_id: str,
@@ -46,20 +48,6 @@ def initialize_chat_session(
             current_user.id,
             db,
         )
-
-        first_message = Message(
-            chat_session_id=session_chat.id,
-            role="assistant",
-            content=(
-                "Hi! Welcome! I'm Luna, and I'm here to help answer "
-                "your questions and guide you through anything you need. "
-                "Just send me a message to get started!"
-            ),
-        )
-
-        db.add(first_message)
-        db.commit()
-        db.refresh(session_chat)
 
     return load_chats(
         session_chat.id,
@@ -101,23 +89,64 @@ def create_chat_session(
                 detail="Product not found",
             )
 
+
+        existing_session = get_chat_session_by_user_and_product(user_id, product.id, db)
+
+        if existing_session is not None:
+            return existing_session
+
         chat_session = ChatSession(
             user_id=user_id,
             product_id=product.id,
         )
 
+    
         db.add(chat_session)
+        db.flush()
+
+
+        first_message = Message(
+            chat_session_id=chat_session.id,
+            role="assistant",
+            content=(
+                    "Hi! Welcome! I'm Luna, and I'm here to help answer "    
+                    "your questions and guide you through anything you need. "
+                    "Just send me a message to get started!"
+                ),
+            )
+        
+        db.add(first_message)
         db.commit()
         db.refresh(chat_session)
 
         return chat_session
 
-    except SQLAlchemyError:
+    except IntegrityError:
+        db.rollback()
+
+        existing_session = get_chat_session_by_user_and_product(
+            user_id,
+            product.id,
+            db,
+        )
+
+        if existing_session is not None:
+            return existing_session
+
+        raise
+
+    except Exception:
         db.rollback()
         raise
 
     finally:
-        lock.release()
+        try:
+            lock.release()
+        except LockError:
+            logger.warning(
+                "Chat session lock expired or was no longer owned: %s",
+                lock.name,
+            )
 
 
 def load_chats(

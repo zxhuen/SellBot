@@ -32,6 +32,11 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   Replace the tracked `.env` with runtime environment variables injected by the platform or CI/CD secret manager.
 - Verification: Confirm `.env` is absent from Git tracking and that application startup still works with environment variables provided by the deployment environment. Rotate all exposed tokens after removal.
 
+
+-------------------------------------------------------
+### FALSE POSITIVE
+-------------------------------------------------------
+
 ### Finding CORR-001
 - ID: CORR-001
 - Priority: High
@@ -50,6 +55,10 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   ```
   Then in `create_chat_session`, catch `IntegrityError` and fetch the existing session instead of failing outright.
 - Verification: Simulate two concurrent requests for the same user/product and verify only one `ChatSession` row exists and both requests resolve to the same session ID.
+
+-------------------------------------------------------
+### DONE
+-------------------------------------------------------
 
 ### Finding CORR-002
 - ID: CORR-002
