@@ -33,7 +33,8 @@ app.add_middleware(
         "http://localhost:5173",
         "https://zxhuen.github.io",
         "https://github.com/zxhuen/Sell-Both-Website",
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "https://sell-bot-website-drab.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows GET, POST, OPTIONS, etc.
