@@ -70,11 +70,28 @@ class ChatSessionResponse(BaseModel):
 
 # Buyer/List-Chat-Sessions
 
+class ChatSessionOwnerResponseBuyer(BaseModel):
+    id: UUID
+    display_name: str
+    avatar_url: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ChatSessionProductResponseBuyer(BaseModel):
+    title: str
+    price: Decimal
+    public_id: str
+    owner: ChatSessionOwnerResponseBuyer
+
+    class Config:
+        from_attributes = True
+
 class ChatSessionResponseBuyer(BaseModel):
     id: UUID
     product_id: UUID
-    product: ChatSessionProductResponse
-    user: ChatSessionUserResponse
+    product: ChatSessionProductResponseBuyer
     last_message_at: datetime
     
     class Config:
