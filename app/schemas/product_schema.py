@@ -68,5 +68,19 @@ class ChatSessionResponse(BaseModel):
         from_attributes = True
 
 
+# Buyer/List-Chat-Sessions
+
+class ChatSessionResponseBuyer(BaseModel):
+    id: UUID
+    product_id: UUID
+    product: ChatSessionProductResponse
+    user: ChatSessionUserResponse
+    last_message_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+
 
 
