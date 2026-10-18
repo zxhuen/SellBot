@@ -118,3 +118,6 @@ Cookie: visitor_token=abc123
 - The request payload schema is defined in [app/schemas/chat_schema.py](../app/schemas/chat_schema.py).
 - The initial assistant greeting is created automatically for brand-new sessions.
 - If a chat session cannot be found for `POST /Chat/Luna`, the endpoint raises a `404` error with the message `No chat session found`.
+
+
+will update this tomrrow
