@@ -80,6 +80,10 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   ```
 - Verification: Run two concurrent product-creation requests for the same user and confirm the final count never exceeds the configured quota.
 
+-------------------------------------------------------
+### DONE
+-------------------------------------------------------
+
 ## C. Correctness and Logic
 
 ### Finding API-001
