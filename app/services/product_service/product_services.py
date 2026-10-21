@@ -29,6 +29,7 @@ from app.Repository.Product_Repo.product_repository import (
     mark_product_as_sold,
 )
 from app.schemas.product_schema import ProductCreate, ProductResponse
+from app.services.validation_service.validation import check_usage_validation
 
 
 AI_DESCRIPTION_TIMEOUT = 10
@@ -36,6 +37,8 @@ AI_DESCRIPTION_TIMEOUT = 10
 
 def create_product(product: ProductCreate, user: User, db: Session):
     try:
+       
+
         new_product = Product(
             id=uuid4(),
             owner_id=user.id,
@@ -53,6 +56,7 @@ def create_product(product: ProductCreate, user: User, db: Session):
                 .with_for_update()
                 .one()
             )
+            check_usage_validation(user, db)
 
             if usage.products_created_today >= user.subscription.daily_product_limit:
                 raise HTTPException(

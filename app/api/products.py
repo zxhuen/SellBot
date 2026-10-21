@@ -44,8 +44,6 @@ async def add_product(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    check_usage_validation(user, db)
-
     return await create_product_with_ai(product, user, db)
 
 
