@@ -50,10 +50,7 @@ def check_usage_validation(user: User, db: Session):
     subscription = user.subscription
 
     # Reset daily usage every 24 hours
-    if datetime.now(UTC) - usage.last_reset_at >= timedelta(hours=24):
-        usage.products_created_today = 0
-        usage.last_reset_at = datetime.now(UTC)
-        db.commit()
+    reset_daily_usage_if_needed(usage, db)
 
     # Daily product creation limit
     if usage.products_created_today >= subscription.daily_product_limit:
@@ -70,3 +67,15 @@ def check_usage_validation(user: User, db: Session):
             status_code=403,
             detail="You have reached the maximum number of products for your subscription.",
         )
+
+def reset_daily_usage_if_needed(
+    usage: UserUsage,
+    db: Session,
+) -> None:
+    now = datetime.now(UTC)
+
+    if now - usage.last_reset_at >= timedelta(hours=24):
+        usage.products_created_today = 0
+        usage.last_reset_at = now
+
+        db.flush()
