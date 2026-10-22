@@ -103,6 +103,14 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   Then document the actual token flow in the route and URL conventions.
 - Verification: Verify the generated OpenAPI docs and a real client request match the implemented flow; ensure the token endpoint exists or dependency semantics are corrected.
 
+-------------------------------------------------------
+### DONE
+- Replaced `OAuth2PasswordBearer` with `HTTPBearer`.
+- Updated `get_current_user()` to extract Bearer credentials.
+- Preserved existing Supabase authentication logic.
+- No frontend changes required.
+-------------------------------------------------------
+
 ### Finding CORR-003
 - ID: CORR-003
 - Priority: Medium
