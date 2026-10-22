@@ -1,3 +1,3 @@
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = HTTPBearer(auto_error=False)

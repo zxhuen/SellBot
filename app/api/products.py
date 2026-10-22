@@ -40,7 +40,6 @@ router = APIRouter(prefix="/Products", tags=["Products"])
 async def add_product(
     request: Request,
     product: ProductCreate,
-    access_token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -51,7 +50,6 @@ async def add_product(
 @limiter.limit("20/minute")
 def get_product(
     request: Request,
-    access_token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):

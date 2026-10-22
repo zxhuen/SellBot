@@ -11,18 +11,28 @@ from app.core.redis import redis_client
 import json
 from app.models.Subscription import Subscription
 from uuid import UUID
+from fastapi.security import HTTPAuthorizationCredentials
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing authentication token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+
     try:
         response = supabase.auth.get_user(token)
         auth_user = response.user
 
         if auth_user is None:
-            raise HTTPException(401, "Invalid token.")
+            raise HTTPException(status_code=401, detail="Invalid token.")
 
         user = (
             db.query(User)
@@ -35,14 +45,17 @@ def get_current_user(
         )
 
         if user is None:
-            raise HTTPException(401, "User not found.")
+            raise HTTPException(status_code=401, detail="User not found.")
 
         return user
 
     except HTTPException:
         raise
     except Exception:
-        raise HTTPException(401, "Invalid or expired token.")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token.",
+        )
 
 
 def check_usage_validation(user: User, db: Session):
