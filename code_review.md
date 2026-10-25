@@ -127,6 +127,10 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   Then create the relevant models and test the actual route/service flows.
 - Verification: Run the project test suite and confirm the fixtures initialize successfully and at least the critical auth/product/chat flows are covered.
 
+-------------------------------------------------------
+### not touching that
+-------------------------------------------------------
+
 ## D. Architecture and Maintainability
 
 ### Finding ARCH-001
@@ -150,6 +154,10 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
           return product
   ```
 - Verification: Review new product creation pipeline end-to-end and ensure one business transaction owns all validation and write operations.
+
+-------------------------------------------------------
+### will do this tomorrow
+-------------------------------------------------------
 
 ### Finding ARCH-002
 - ID: ARCH-002
