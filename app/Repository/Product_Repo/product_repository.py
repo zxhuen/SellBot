@@ -17,6 +17,18 @@ def list_product_repo(user: User, db: Session):
 
     return result.scalars().all()
 
+def count_products(user: User, db: Session):
+    total_products = (
+        db.query(func.count(Product.id))
+        .filter(Product.owner_id == user.id)
+        .scalar()
+    )
+
+    return total_products
+
+
+
+
 
 def get_product(user: User, id: UUID, db: Session):
     stmt = select(Product).where(

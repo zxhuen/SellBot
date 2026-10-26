@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, Depends
-from app.Repository.Product_Repo.product_repository import list_product_repo
+from app.Repository.Product_Repo.product_repository import count_products, list_product_repo
 from app.core.supabse_bucket import supabase
 from app.models import User, UserUsage
 from app.core.security import oauth2_scheme
@@ -73,9 +73,9 @@ def check_usage_validation(user: User, db: Session):
         )
 
     # Total product limit
-    total_products = list_product_repo(user, db)
+    total_products = count_products(user, db)
 
-    if len(total_products) >= subscription.max_products:
+    if total_products >= subscription.max_products:
         raise HTTPException(
             status_code=403,
             detail="You have reached the maximum number of products for your subscription.",
