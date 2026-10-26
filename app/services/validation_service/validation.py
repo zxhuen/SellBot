@@ -58,8 +58,7 @@ def get_current_user(
         )
 
 
-def check_usage_validation(user: User, db: Session):
-    usage = user.usage
+def check_usage_validation(user: User, db: Session, usage: UserUsage):
     subscription = user.subscription
 
     # Reset daily usage every 24 hours

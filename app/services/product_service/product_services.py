@@ -37,8 +37,6 @@ AI_DESCRIPTION_TIMEOUT = 10
 
 def create_product(product: ProductCreate, user: User, db: Session):
     try:
-       
-
         new_product = Product(
             id=uuid4(),
             owner_id=user.id,
@@ -49,21 +47,15 @@ def create_product(product: ProductCreate, user: User, db: Session):
             contact_link=str(product.contact_link),
         )
 
-        with db.begin_nested():
+        with db.begin():
             usage = (
                 db.query(UserUsage)
                 .filter(UserUsage.user_id == user.id)
                 .with_for_update()
                 .one()
             )
-            check_usage_validation(user, db)
 
-            if usage.products_created_today >= user.subscription.daily_product_limit:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You have reached your daily product creation limit.",
-                )
-
+            check_usage_validation(user, db, usage)
             db.add(new_product)
             usage.products_created_today += 1
 
