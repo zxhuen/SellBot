@@ -156,7 +156,7 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
 - Verification: Review new product creation pipeline end-to-end and ensure one business transaction owns all validation and write operations.
 
 -------------------------------------------------------
-### will do this tomorrow
+### Done
 -------------------------------------------------------
 
 ### Finding ARCH-002

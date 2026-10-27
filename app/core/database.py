@@ -18,7 +18,7 @@ engine = create_engine(
     echo=True,
     pool_size=10,
     max_overflow=20,
-    pool_timeout=30,
+    pool_timeout=30, 
     pool_recycle=1800,
 )
 
