@@ -170,6 +170,11 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
 - Recommended change: Centralize chat session/message write operations in one transactional service method and rely on database constraints for uniqueness and ordering, with Redis only as a best-effort advisory lock if needed.
 - Verification: Run concurrent, multi-instance chat initialization and message send tests and confirm the resulting state matches the expected database invariants.
 
+
+-------------------------------------------------------
+### Ongoing
+-------------------------------------------------------
+
 ## E. Database and Performance
 
 ### Finding PERF-001
