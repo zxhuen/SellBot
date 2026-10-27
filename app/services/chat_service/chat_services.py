@@ -57,6 +57,7 @@ def initialize_chat_session(
 
 
 
+
 def create_chat_session(
     public_id: str,
     user_id: UUID,
@@ -74,69 +75,71 @@ def create_chat_session(
             detail="Another session creation is already in progress",
         )
 
+    product = None
+
     try:
-        product = (
-            db.execute(
-                select(Product).where(Product.public_id == public_id)
-            )
-            .scalars()
-            .first()
-        )
-
-        if product is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Product not found",
+        with db.begin():
+            product = (
+                db.execute(
+                    select(Product).where(
+                        Product.public_id == public_id
+                    )
+                )
+                .scalars()
+                .first()
             )
 
+            if product is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Product not found",
+                )
 
-        existing_session = get_chat_session_by_user_and_product(user_id, product.id, db)
+            existing_session = get_chat_session_by_user_and_product(
+                user_id,
+                product.id,
+                db,
+            )
 
-        if existing_session is not None:
-            return existing_session
+            if existing_session is not None:
+                return existing_session
 
-        chat_session = ChatSession(
-            user_id=user_id,
-            product_id=product.id,
-        )
+            chat_session = ChatSession(
+                user_id=user_id,
+                product_id=product.id,
+            )
 
-    
-        db.add(chat_session)
-        db.flush()
+            db.add(chat_session)
+            db.flush()
 
-
-        first_message = Message(
-            chat_session_id=chat_session.id,
-            role="assistant",
-            content=(
-                    "Hi! Welcome! I'm Luna, and I'm here to help answer "    
+            first_message = Message(
+                chat_session_id=chat_session.id,
+                role="assistant",
+                content=(
+                    "Hi! Welcome! I'm Luna, and I'm here to help answer "
                     "your questions and guide you through anything you need. "
                     "Just send me a message to get started!"
                 ),
             )
-        
-        db.add(first_message)
-        db.commit()
+
+            db.add(first_message)
+            db.flush()
+
         db.refresh(chat_session)
 
         return chat_session
 
     except IntegrityError:
-        db.rollback()
+        if product is not None:
+            existing_session = get_chat_session_by_user_and_product(
+                user_id,
+                product.id,
+                db,
+            )
 
-        existing_session = get_chat_session_by_user_and_product(
-            user_id,
-            product.id,
-            db,
-        )
+            if existing_session is not None:
+                return existing_session
 
-        if existing_session is not None:
-            return existing_session
-
-        raise
-
-    except Exception:
-        db.rollback()
         raise
 
     finally:
