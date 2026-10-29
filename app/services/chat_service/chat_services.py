@@ -30,6 +30,7 @@ from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timezone
 from redis.exceptions import LockError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import update
 
 def initialize_chat_session(
     public_id: str,
@@ -169,6 +170,7 @@ async def send_chat(
     current_user: User,
     db: Session,
 ):
+    # 1. Retrieve chat session and verify ownership
     chat_session = get_chat_session(
         public_id,
         current_user.id,
@@ -181,65 +183,77 @@ async def send_chat(
             detail="No chat session found",
         )
 
-    lock = redis_client.lock(
-        f"chat_sending:{chat_session.id}",
-        timeout=30,
-        blocking_timeout=5,
+    # 2. Capture conversation version
+    expected_version = chat_session.version
+
+    # 3. Retrieve conversation history
+    message_history = get_messages(
+        chat_session.id,
+        db,
     )
 
-    if not lock.acquire():
-        raise HTTPException(
-            status_code=409,
-            detail="Another message is currently being processed",
-        )
+    llm_messages = [
+        {
+            "role": message.role,
+            "content": message.content,
+        }
+        for message in message_history
+    ]
 
+    # 4. Generate LLM response outside transaction
+    generated_prompt = generate_memory_prompt(
+        chat_session.product,
+        llm_messages,
+        chat.message,
+    )
+
+    response = await chat_generate(generated_prompt)
+
+    # 5. Atomically validate version and persist messages
     try:
-        message_history = get_messages(
-            chat_session.id,
-            db,
-        )
+        with db.begin():
 
-        llm_messages = [
-            {
-                "role": message.role,
-                "content": message.content,
-            }
-            for message in message_history
-        ]
+            result = db.execute(
+                update(ChatSession)
+                .where(
+                    ChatSession.id == chat_session.id,
+                    ChatSession.version == expected_version,
+                )
+                .values(
+                    version=ChatSession.version + 1,
+                    last_message_at=datetime.now(timezone.utc),
+                )
+            )
 
-        user_message = Message(
-            chat_session_id=chat_session.id,
-            role="User",
-            content=chat.message,
-        )
+            # 6. Reject conflicting requests
+            if result.rowcount != 1:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Conversation changed. Please retry.",
+                )
 
-        db.add(user_message)
+            # 7. Persist user message
+            user_message = Message(
+                chat_session_id=chat_session.id,
+                role="User",
+                content=chat.message,
+            )
 
-        generated_prompt = generate_memory_prompt(
-            chat_session.product,
-            llm_messages,
-            chat.message,
-        )
+            db.add(user_message)
 
-        response = await chat_generate(generated_prompt)
+            # 8. Persist assistant response
+            llm_message = Message(
+                chat_session_id=chat_session.id,
+                role="Assistant",
+                content=response,
+            )
 
-        llm_message = Message(
-            chat_session_id=chat_session.id,
-            role="Assistant",
-            content=response,
-        )
+            db.add(llm_message)
 
-        db.add(llm_message)
-
-        chat_session.last_message_at = datetime.now(timezone.utc)
-
-        db.commit()
+        # Transaction automatically commits here
 
         return response
 
     except Exception:
         db.rollback()
         raise
-
-    finally:
-        lock.release()
