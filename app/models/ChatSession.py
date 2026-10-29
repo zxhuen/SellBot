@@ -66,6 +66,13 @@ class ChatSession(Base):
         cascade="all, delete-orphan",
     )
 
+    version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
     __table_args__ = (
     UniqueConstraint(
         "user_id",
