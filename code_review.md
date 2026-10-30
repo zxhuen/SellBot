@@ -172,7 +172,7 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
 
 
 -------------------------------------------------------
-### Ongoing, will do it tomrrow
+### Done
 -------------------------------------------------------
 
 ## E. Database and Performance
