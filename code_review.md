@@ -197,6 +197,10 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   ```
 - Verification: Measure the response time and payload size for a user with a large product catalog and confirm the endpoint remains bounded and paginated.
 
+-------------------------------------------------------
+### I don't need Pagination now since products are only 15 max, maybe soon
+-------------------------------------------------------
+
 ### Finding PERF-002
 - ID: PERF-002
 - Priority: Low
@@ -212,6 +216,7 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   Index("ix_messages_chat_session_created_at", Message.chat_session_id, Message.created_at)
   ```
 - Verification: Inspect the generated schema migration and confirm indexes exist for the heavy query paths; check query plans on a populated database.
+
 
 ## F. Security and Reliability
 
