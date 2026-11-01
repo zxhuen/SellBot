@@ -217,6 +217,10 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   ```
 - Verification: Inspect the generated schema migration and confirm indexes exist for the heavy query paths; check query plans on a populated database.
 
+-------------------------------------------------------
+### False Positive - I do have a index, in unique constraint
+-------------------------------------------------------
+
 
 ## F. Security and Reliability
 

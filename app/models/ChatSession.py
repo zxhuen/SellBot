@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Index, UniqueConstraint
 
 from sqlalchemy import (
     DateTime,
@@ -33,7 +33,7 @@ class ChatSession(Base):
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
+        index=False,
     )
 
     product_id: Mapped[UUID] = mapped_column(
@@ -74,9 +74,17 @@ class ChatSession(Base):
     )
 
     __table_args__ = (
-    UniqueConstraint(
+     UniqueConstraint(
         "user_id",
         "product_id",
         name="uq_chat_session_user_product",
      ),
+     Index(
+        "ix_chat_sessions_user_last_message",
+        "user_id",
+        last_message_at.desc(),
+        id
+     ),
     )   
+
+    
