@@ -235,6 +235,11 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
 - Recommended change: Restrict methods to the exact set needed (`GET`, `POST`, `PATCH`, `DELETE`, `OPTIONS`), limit headers to those the app truly consumes, and review whether credentialed requests are needed for all origins.
 - Verification: Ensure the SPA or API consumer still works after the CORS policy is narrowed and that no browser flow depends on wildcard headers or methods.
 
+
+-------------------------------------------------------
+### will do this tomorrow
+-------------------------------------------------------
+
 ### Finding REL-001
 - ID: REL-001
 - Priority: Medium
