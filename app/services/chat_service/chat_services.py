@@ -211,7 +211,7 @@ async def send_chat(
 
     # 5. Atomically validate version and persist messages
     try:
-        with db.begin():
+        with db.begin_nested():
 
             result = db.execute(
                 update(ChatSession)
