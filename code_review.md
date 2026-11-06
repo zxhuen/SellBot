@@ -251,6 +251,11 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
 - Recommended change: Validate the linked `subscription` and `usage` records at creation and use explicit, guarded access with clear error handling. Add a migration or service constraint to ensure every user has a valid subscription and usage row.
 - Verification: Create or update a user without a subscription and confirm the API returns a controlled validation error rather than an unhandled exception.
 
+
+-------------------------------------------------------
+### FALSE POSITIVE - I intentionally created it that way becayse USER will always have a subscription and usage created and they're inside a transacton
+-------------------------------------------------------
+
 ## G. API Design
 
 ### Finding API-002
