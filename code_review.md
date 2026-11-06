@@ -273,59 +273,8 @@ The codebase is serviceable for a small internal prototype, but it is not yet ha
   ```
 - Verification: Review the OpenAPI docs and ensure all endpoints follow one consistent pattern for response model, naming, and error handling.
 
-## H. Testing Gaps
+-------------------------------------------------------
+### will try to refactor every function that returns an orm obj
+-------------------------------------------------------
 
-### Finding TEST-001
-- ID: TEST-001
-- Priority: Medium
-- Category: Testing
-- Location: app/tests/conftest.py; app/tests (no active test suite)
-- Current behavior: The workspace includes a fixture module but no meaningful test coverage for product creation, chat sessions, auth, or usage limits. The current fixture file is not valid and would fail before the application is exercised.
-- Problem: There is no quality gate to prevent regressions in authentication, ownership checks, transactions, or chat/session logic.
-- Impact: A bug can be merged without detection, especially in data-integrity-sensitive paths such as rate limits, chat duplication, and ownership validation.
-- Recommended change: Add targeted tests for: (1) duplicate chat session creation; (2) daily product limit race condition; (3) non-owner access to product history; (4) empty-results behavior on customer chats; (5) invalid or expired Supabase token handling.
-- Example:
-  ```python
-  def test_duplicate_chat_session_is_reused():
-      # create same product/user pair twice
-      # assert only one ChatSession row exists
-  ```
-- Verification: Run the test suite after adding the scenarios above and ensure the critical flows stay green across repeated runs.
 
-## I. Deployment and Configuration
-
-### Finding DEP-001
-- ID: DEP-001
-- Priority: Medium
-- Category: Deployment
-- Location: app/core/config.py; .env; app/core/database.py
-- Current behavior: The app reads configuration from a root `.env` file and the database engine is configured at import time with a `create_engine()` and `create_async_engine()` using the settings loaded from that file. There is no clear separation between local configuration and production configuration.
-- Problem: This is vulnerable to accidental misconfiguration and makes the runtime environment dependent on the repo checkout rather than the deployment environment. It also makes local development and production settings harder to audit.
-- Impact: Deployment drift, accidental credential leakage, and inconsistent behavior between environments.
-- Recommended change: Use environment-based configuration only in deployment, with `.env` retained for local dev but excluded from source control. Consider validating required variables at startup and failing fast when they are missing.
-- Example:
-  ```python
-  settings = Settings()
-  # fail fast if required variables are missing
-  ```
-- Verification: Start the app in a clean environment with only required variables set and confirm the app fails early with a clear message when configuration is missing.
-
-## J. Prioritized Action Plan
-
-1. Immediate fixes (highest value / lowest effort)
-   - Remove committed secrets from the repository and rotate all exposed credentials.
-   - Add a database uniqueness constraint and idempotent handling for chat-session creation.
-   - Fix the race condition in product creation limits by performing the validation and increment in the same locked transaction.
-   - Add real validation tests for the critical flows, especially chat sessions and subscription limits.
-
-2. Next priority
-   - Standardize authentication semantics and align the app with the actual client flow instead of a misleading OAuth2 setup.
-   - Review and tighten CORS policy and dependency configuration.
-   - Add explicit indexes and bounded pagination for the large collection queries.
-
-3. Longer-term improvements
-   - Refactor API/service boundaries so one service owns each transaction and the API layer remains thin.
-   - Introduce observability and retry policies around external AI and Supabase calls.
-   - Complete the test harness so the project has meaningful regression coverage before additional features are added.
-
-Overall, the codebase shows a workable small-service structure, but the current state should not be considered production-ready without addressing the secret exposure, duplicate chat session risk, and concurrent usage-limit bug.
